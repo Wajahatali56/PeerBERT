@@ -1,0 +1,36 @@
+project:
+  name: peer-review-ai-detection
+  seed: 42
+
+paths:
+  # Local: "." . On Kaggle: set env var PRAD_WORK_DIR=/kaggle/working (overrides this).
+  work_dir: "."
+  audit_dir: outputs/audit
+  manifest_dir: outputs/manifests
+  model_dir: outputs/models
+  results_dir: outputs/results
+
+data:
+  intellabs:
+    repo_id: IntelLabs/AI-Peer-Review-Detection-Benchmark
+    train_source_subset: calibration   # dataset card calls it "Training"
+    test_subset: test
+    extended_subset: extended          # robustness only, never used for training
+    use_extended: false
+    # NOT assumed: confirm with scripts/00_inspect_datasets.py before using.
+    ai_label_value: 1
+    val_fraction_papers: 0.15
+    train_max_rows: 24000              # null = use all; compute-driven cap
+    model_eval_max_rows: 30000         # null = full official test
+    baseline_eval_max_rows: 600
+  semdetect:
+    repo_id: Sem-Detect/ML_Conferences-Peer-Reviews
+    config_name: reviews
+    label_map: {human: 0, ai: 1, rewrite: 2}
+    val_fraction_papers: 0.10
+    baseline_eval_max_rows: 600
+
+inspection:
+  sample_conf_years: [ICLR2021, ICLR2022, ICLR2023, ICLR2024, NeurIPS2021, NeurIPS2024]
+  generator_folder: gpt4o
+  compare_generator_folder: claude
