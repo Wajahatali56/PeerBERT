@@ -1,0 +1,3610 @@
+{
+  "intellabs": {
+    "repo_id": "IntelLabs/AI-Peer-Review-Detection-Benchmark",
+    "expected_label_mapping": {
+      "0": "human-written",
+      "1": "AI-generated"
+    },  
+    "label_mapping_source": "Dataset card supplied for this experiment",
+    "subset_file_counts": {
+      "calibration": {
+        "claude": 4,
+        "gemini": 4,
+        "gpt4o": 4,
+        "llama": 4,
+        "qwen": 4
+      },
+      "extended": {
+        "gpt4o": 16,
+        "llama": 16
+      },
+      "test": {
+        "claude": 16,
+        "gemini": 16,
+        "gpt4o": 16,
+        "llama": 16,
+        "qwen": 16
+      }
+    },
+    "subsets_found": [
+      "calibration",
+      "extended",
+      "test"
+    ],
+    "subsets_missing": [],
+    "files": [
+      {
+        "file": "calibration/claude/ICLR2021.calibration.claude-sonnet-3.5v2.csv",
+        "rows": 3828,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1914,
+          "0": 1914
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 2650.4879832810866,
+          "median": 2417.0,
+          "max": 22509
+        },
+        "mean_review_length_by_label": {
+          "0": 2876.458725182863,
+          "1": 2424.5172413793102
+        },
+        "PaperId_stats": {
+          "non_null": 3828,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3328,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 1914,
+          "duplicate_non_null_rows": 1914,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 3828,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1914
+        },
+        "review_ids_associated_with_multiple_labels": 1914,
+        "subset": "calibration",
+        "generator_folder": "claude",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "calibration/gemini/ICLR2021.calibration.gemini-1.5-pro-002.csv",
+        "rows": 3826,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1913,
+          "0": 1913
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 3087.1058546785152,
+          "median": 3133.5,
+          "max": 22509
+        },
+        "mean_review_length_by_label": {
+          "0": 2875.5154208050185,
+          "1": 3298.6962885520124
+        },
+        "PaperId_stats": {
+          "non_null": 3826,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3326,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3826,
+          "unique_non_null": 1913,
+          "duplicate_non_null_rows": 1913,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3826,
+          "unique_non_null": 3826,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1913
+        },
+        "review_ids_associated_with_multiple_labels": 1913,
+        "subset": "calibration",
+        "generator_folder": "gemini",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "calibration/gpt4o/ICLR2021.calibration.gpt-4o.csv",
+        "rows": 3828,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1914,
+          "0": 1914
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 3345.205590386625,
+          "median": 3548.0,
+          "max": 22509
+        },
+        "mean_review_length_by_label": {
+          "0": 2876.458725182863,
+          "1": 3813.9524555903868
+        },
+        "PaperId_stats": {
+          "non_null": 3828,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3328,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 1914,
+          "duplicate_non_null_rows": 1914,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 3828,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1914
+        },
+        "review_ids_associated_with_multiple_labels": 1914,
+        "subset": "calibration",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "calibration/llama/ICLR2021.calibration.llama-3.1-70b.csv",
+        "rows": 3828,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1914,
+          "0": 1914
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 2703.983803552769,
+          "median": 2494.5,
+          "max": 22509
+        },
+        "mean_review_length_by_label": {
+          "0": 2876.458725182863,
+          "1": 2531.508881922675
+        },
+        "PaperId_stats": {
+          "non_null": 3828,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3328,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 1914,
+          "duplicate_non_null_rows": 1914,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 3828,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1914
+        },
+        "review_ids_associated_with_multiple_labels": 1914,
+        "subset": "calibration",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "calibration/qwen/ICLR2021.calibration.qwen2.5-72b.csv",
+        "rows": 3802,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1901,
+          "0": 1901
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 3851.9089952656495,
+          "median": 4298.0,
+          "max": 22509
+        },
+        "mean_review_length_by_label": {
+          "0": 2873.7674907943187,
+          "1": 4830.050499736981
+        },
+        "PaperId_stats": {
+          "non_null": 3802,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3304,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3802,
+          "unique_non_null": 1901,
+          "duplicate_non_null_rows": 1901,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3802,
+          "unique_non_null": 3802,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1901
+        },
+        "review_ids_associated_with_multiple_labels": 1901,
+        "subset": "calibration",
+        "generator_folder": "qwen",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "calibration/claude/ICLR2022.calibration.claude-sonnet-3.5v2.csv",
+        "rows": 3844,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1922,
+          "0": 1922
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3844,
+          "unique_non_null": 499,
+          "duplicate_non_null_rows": 3345,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3844,
+          "unique_non_null": 1922,
+          "duplicate_non_null_rows": 1922,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3844,
+          "unique_non_null": 3844,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1922
+        },
+        "review_ids_associated_with_multiple_labels": 1922,
+        "subset": "calibration",
+        "generator_folder": "claude",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "calibration/gemini/ICLR2022.calibration.gemini-1.5-pro-002.csv",
+        "rows": 3878,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1939,
+          "0": 1939
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3878,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3378,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3878,
+          "unique_non_null": 1939,
+          "duplicate_non_null_rows": 1939,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3878,
+          "unique_non_null": 3878,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1939
+        },
+        "review_ids_associated_with_multiple_labels": 1939,
+        "subset": "calibration",
+        "generator_folder": "gemini",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "calibration/gpt4o/ICLR2022.calibration.gpt-4o.csv",
+        "rows": 3882,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1941,
+          "0": 1941
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3882,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3382,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3882,
+          "unique_non_null": 1941,
+          "duplicate_non_null_rows": 1941,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3882,
+          "unique_non_null": 3882,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1941
+        },
+        "review_ids_associated_with_multiple_labels": 1941,
+        "subset": "calibration",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "calibration/llama/ICLR2022.calibration.llama-3.1-70b.csv",
+        "rows": 3880,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1940,
+          "0": 1940
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3880,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3380,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3880,
+          "unique_non_null": 1940,
+          "duplicate_non_null_rows": 1940,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3880,
+          "unique_non_null": 3880,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1940
+        },
+        "review_ids_associated_with_multiple_labels": 1940,
+        "subset": "calibration",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "calibration/qwen/ICLR2022.calibration.qwen2.5-72b.csv",
+        "rows": 3860,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1930,
+          "0": 1930
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3860,
+          "unique_non_null": 499,
+          "duplicate_non_null_rows": 3361,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3860,
+          "unique_non_null": 1930,
+          "duplicate_non_null_rows": 1930,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3860,
+          "unique_non_null": 3860,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1930
+        },
+        "review_ids_associated_with_multiple_labels": 1930,
+        "subset": "calibration",
+        "generator_folder": "qwen",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "calibration/claude/NeurIPS2021.calibration.claude-sonnet-3.5v2.csv",
+        "rows": 3830,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1915,
+          "0": 1915
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3830,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3330,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3830,
+          "unique_non_null": 1915,
+          "duplicate_non_null_rows": 1915,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3830,
+          "unique_non_null": 3830,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1915
+        },
+        "review_ids_associated_with_multiple_labels": 1915,
+        "subset": "calibration",
+        "generator_folder": "claude",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "calibration/gemini/NeurIPS2021.calibration.gemini-1.5-pro-002.csv",
+        "rows": 3828,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1914,
+          "0": 1914
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3828,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3328,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 1914,
+          "duplicate_non_null_rows": 1914,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 3828,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1914
+        },
+        "review_ids_associated_with_multiple_labels": 1914,
+        "subset": "calibration",
+        "generator_folder": "gemini",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "calibration/gpt4o/NeurIPS2021.calibration.gpt-4o.csv",
+        "rows": 3830,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1915,
+          "0": 1915
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3830,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3330,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3830,
+          "unique_non_null": 1915,
+          "duplicate_non_null_rows": 1915,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3830,
+          "unique_non_null": 3830,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1915
+        },
+        "review_ids_associated_with_multiple_labels": 1915,
+        "subset": "calibration",
+        "generator_folder": "gpt4o",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "calibration/llama/NeurIPS2021.calibration.llama-3.1-70b.csv",
+        "rows": 3828,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1914,
+          "0": 1914
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3828,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3328,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 1914,
+          "duplicate_non_null_rows": 1914,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3828,
+          "unique_non_null": 3828,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1914
+        },
+        "review_ids_associated_with_multiple_labels": 1914,
+        "subset": "calibration",
+        "generator_folder": "llama",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "calibration/qwen/NeurIPS2021.calibration.qwen2.5-72b.csv",
+        "rows": 3818,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1909,
+          "0": 1909
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3818,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3318,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3818,
+          "unique_non_null": 1909,
+          "duplicate_non_null_rows": 1909,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3818,
+          "unique_non_null": 3818,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1909
+        },
+        "review_ids_associated_with_multiple_labels": 1909,
+        "subset": "calibration",
+        "generator_folder": "qwen",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "extended/gpt4o/ICLR2021.extended.gpt-4o.csv",
+        "rows": 11116,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 5558,
+          "0": 5558
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 3400.826466354804,
+          "median": 3577.5,
+          "max": 25227
+        },
+        "mean_review_length_by_label": {
+          "0": 2993.4562792371357,
+          "1": 3808.196653472472
+        },
+        "PaperId_stats": {
+          "non_null": 11116,
+          "unique_non_null": 1434,
+          "duplicate_non_null_rows": 9682,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 11116,
+          "unique_non_null": 5558,
+          "duplicate_non_null_rows": 5558,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 11116,
+          "unique_non_null": 11116,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 5558
+        },
+        "review_ids_associated_with_multiple_labels": 5558,
+        "subset": "extended",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "extended/gpt4o/ICLR2022.extended.gpt-4o.csv",
+        "rows": 12260,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 6130,
+          "0": 6130
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 12260,
+          "unique_non_null": 1575,
+          "duplicate_non_null_rows": 10685,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 12260,
+          "unique_non_null": 6130,
+          "duplicate_non_null_rows": 6130,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 12260,
+          "unique_non_null": 12260,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 6130
+        },
+        "review_ids_associated_with_multiple_labels": 6130,
+        "subset": "extended",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "extended/llama/ICLR2022.extended.llama-3.1-70b.csv",
+        "rows": 12248,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 6124,
+          "0": 6124
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 12248,
+          "unique_non_null": 1575,
+          "duplicate_non_null_rows": 10673,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 12248,
+          "unique_non_null": 6124,
+          "duplicate_non_null_rows": 6124,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 12248,
+          "unique_non_null": 12248,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 6124
+        },
+        "review_ids_associated_with_multiple_labels": 6124,
+        "subset": "extended",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "extended/gpt4o/ICLR2023.extended.gpt-4o.csv",
+        "rows": 24746,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary_of_the_paper",
+          "strength_and_weaknesses",
+          "clarity_quality_novelty_and_reproducibility",
+          "summary_of_the_review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 12373,
+          "0": 12373
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 24746,
+          "unique_non_null": 3277,
+          "duplicate_non_null_rows": 21469,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 24746,
+          "unique_non_null": 12373,
+          "duplicate_non_null_rows": 12373,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 24746,
+          "unique_non_null": 24746,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 12373
+        },
+        "review_ids_associated_with_multiple_labels": 12373,
+        "subset": "extended",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2023"
+      },
+      {
+        "file": "extended/llama/ICLR2023.extended.llama-3.1-70b.csv",
+        "rows": 24746,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "strength_and_weaknesses",
+          "clarity_quality_novelty_and_reproducibility",
+          "summary_of_the_review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 12373,
+          "0": 12373
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 24746,
+          "unique_non_null": 3277,
+          "duplicate_non_null_rows": 21469,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 24746,
+          "unique_non_null": 12373,
+          "duplicate_non_null_rows": 12373,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 24746,
+          "unique_non_null": 24746,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 12373
+        },
+        "review_ids_associated_with_multiple_labels": 12373,
+        "subset": "extended",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2023"
+      },
+      {
+        "file": "extended/gpt4o/ICLR2024.extended.gpt-4o.csv",
+        "rows": 51892,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "rating",
+          "confidence",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 25946,
+          "0": 25946
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 51892,
+          "unique_non_null": 6721,
+          "duplicate_non_null_rows": 45171,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 51892,
+          "unique_non_null": 25946,
+          "duplicate_non_null_rows": 25946,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 51892,
+          "unique_non_null": 51892,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 25946
+        },
+        "review_ids_associated_with_multiple_labels": 25946,
+        "subset": "extended",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2024"
+      },
+      {
+        "file": "extended/llama/ICLR2024.extended.llama-3.1-70b.csv",
+        "rows": 51856,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "rating",
+          "confidence",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 25928,
+          "0": 25928
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 51856,
+          "unique_non_null": 6721,
+          "duplicate_non_null_rows": 45135,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 51856,
+          "unique_non_null": 25928,
+          "duplicate_non_null_rows": 25928,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 51856,
+          "unique_non_null": 51856,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 25928
+        },
+        "review_ids_associated_with_multiple_labels": 25928,
+        "subset": "extended",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2024"
+      },
+      {
+        "file": "extended/gpt4o/NeurIPS2021.extended.gpt-4o.csv",
+        "rows": 13456,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 6728,
+          "0": 6728
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 13456,
+          "unique_non_null": 1736,
+          "duplicate_non_null_rows": 11720,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 13456,
+          "unique_non_null": 6728,
+          "duplicate_non_null_rows": 6728,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 13456,
+          "unique_non_null": 13456,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 6728
+        },
+        "review_ids_associated_with_multiple_labels": 6728,
+        "subset": "extended",
+        "generator_folder": "gpt4o",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "extended/llama/NeurIPS2021.extended.llama-3.1-70b.csv",
+        "rows": 13452,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 6726,
+          "0": 6726
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 13452,
+          "unique_non_null": 1736,
+          "duplicate_non_null_rows": 11716,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 13452,
+          "unique_non_null": 6726,
+          "duplicate_non_null_rows": 6726,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 13452,
+          "unique_non_null": 13452,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 6726
+        },
+        "review_ids_associated_with_multiple_labels": 6726,
+        "subset": "extended",
+        "generator_folder": "llama",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "extended/gpt4o/NeurIPS2024.extended.gpt-4o.csv",
+        "rows": 29280,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "limitations",
+          "ethics_flag",
+          "ethics_review_area",
+          "rating",
+          "confidence",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 14640,
+          "0": 14640
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 29280,
+          "unique_non_null": 3726,
+          "duplicate_non_null_rows": 25554,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 29280,
+          "unique_non_null": 14640,
+          "duplicate_non_null_rows": 14640,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 29280,
+          "unique_non_null": 29280,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 14640
+        },
+        "review_ids_associated_with_multiple_labels": 14640,
+        "subset": "extended",
+        "generator_folder": "gpt4o",
+        "conference_year": "NeurIPS2024"
+      },
+      {
+        "file": "extended/llama/NeurIPS2024.extended.llama-3.1-70b.csv",
+        "rows": 29192,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "limitations",
+          "ethics_flag",
+          "rating",
+          "confidence",
+          "soundness",
+          "presentation",
+          "contribution",
+          "ethics_review_area",
+          "strengths.strength_1",
+          "strengths.strength_2",
+          "strengths.strength_3",
+          "strengths.strength_4",
+          "strengths.strength_5",
+          "weaknesses.weakness_1",
+          "weaknesses.weakness_2",
+          "weaknesses.weakness_3",
+          "questions.question_1",
+          "questions.question_2",
+          "questions.question_3",
+          "limitations.limitation_1",
+          "limitations.limitation_2",
+          "limitations.limitation_3",
+          "flag_for_ethics_review",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 14596,
+          "0": 14596
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 29192,
+          "unique_non_null": 3726,
+          "duplicate_non_null_rows": 25466,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 29192,
+          "unique_non_null": 14596,
+          "duplicate_non_null_rows": 14596,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 29192,
+          "unique_non_null": 29192,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 14596
+        },
+        "review_ids_associated_with_multiple_labels": 14596,
+        "subset": "extended",
+        "generator_folder": "llama",
+        "conference_year": "NeurIPS2024"
+      },
+      {
+        "file": "test/claude/ICLR2021.test.claude-sonnet-3.5v2.csv",
+        "rows": 3842,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1921,
+          "0": 1921
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 2701.957834461218,
+          "median": 2435.0,
+          "max": 20690
+        },
+        "mean_review_length_by_label": {
+          "0": 2972.34565330557,
+          "1": 2431.5700156168664
+        },
+        "PaperId_stats": {
+          "non_null": 3842,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3344,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3842,
+          "unique_non_null": 1921,
+          "duplicate_non_null_rows": 1921,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3842,
+          "unique_non_null": 3842,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1921
+        },
+        "review_ids_associated_with_multiple_labels": 1921,
+        "subset": "test",
+        "generator_folder": "claude",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "test/gemini/ICLR2021.test.gemini-1.5-pro-002.csv",
+        "rows": 3840,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1920,
+          "0": 1920
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 3136.414583333333,
+          "median": 3164.0,
+          "max": 20690
+        },
+        "mean_review_length_by_label": {
+          "0": 2973.1697916666667,
+          "1": 3299.659375
+        },
+        "PaperId_stats": {
+          "non_null": 3840,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3342,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3840,
+          "unique_non_null": 1920,
+          "duplicate_non_null_rows": 1920,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3840,
+          "unique_non_null": 3840,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1920
+        },
+        "review_ids_associated_with_multiple_labels": 1920,
+        "subset": "test",
+        "generator_folder": "gemini",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "test/gpt4o/ICLR2021.test.gpt-4o.csv",
+        "rows": 3842,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1921,
+          "0": 1921
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 3393.2326913066113,
+          "median": 3589.0,
+          "max": 20690
+        },
+        "mean_review_length_by_label": {
+          "0": 2972.34565330557,
+          "1": 3814.119729307652
+        },
+        "PaperId_stats": {
+          "non_null": 3842,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3344,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3842,
+          "unique_non_null": 1921,
+          "duplicate_non_null_rows": 1921,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3842,
+          "unique_non_null": 3842,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1921
+        },
+        "review_ids_associated_with_multiple_labels": 1921,
+        "subset": "test",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "test/llama/ICLR2021.test.llama-3.1-70b.csv",
+        "rows": 3838,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1919,
+          "0": 1919
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 2747.579729025534,
+          "median": 2542.0,
+          "max": 20690
+        },
+        "mean_review_length_by_label": {
+          "0": 2971.8744137571653,
+          "1": 2523.285044293903
+        },
+        "PaperId_stats": {
+          "non_null": 3838,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3340,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3838,
+          "unique_non_null": 1919,
+          "duplicate_non_null_rows": 1919,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3838,
+          "unique_non_null": 3838,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1919
+        },
+        "review_ids_associated_with_multiple_labels": 1919,
+        "subset": "test",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "test/qwen/ICLR2021.test.qwen2.5-72b.csv",
+        "rows": 3830,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [],
+        "label_counts": {
+          "1": 1915,
+          "0": 1915
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "empty_review_count": 0,
+        "review_length_chars": {
+          "mean": 3863.18772845953,
+          "median": 4269.0,
+          "max": 20690
+        },
+        "mean_review_length_by_label": {
+          "0": 2970.4924281984336,
+          "1": 4755.8830287206265
+        },
+        "PaperId_stats": {
+          "non_null": 3830,
+          "unique_non_null": 497,
+          "duplicate_non_null_rows": 3333,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3830,
+          "unique_non_null": 1915,
+          "duplicate_non_null_rows": 1915,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3830,
+          "unique_non_null": 3830,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1915
+        },
+        "review_ids_associated_with_multiple_labels": 1915,
+        "subset": "test",
+        "generator_folder": "qwen",
+        "conference_year": "ICLR2021"
+      },
+      {
+        "file": "test/claude/ICLR2022.test.claude-sonnet-3.5v2.csv",
+        "rows": 3900,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1950,
+          "0": 1950
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3900,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3402,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3900,
+          "unique_non_null": 1950,
+          "duplicate_non_null_rows": 1950,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3900,
+          "unique_non_null": 3900,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1950
+        },
+        "review_ids_associated_with_multiple_labels": 1950,
+        "subset": "test",
+        "generator_folder": "claude",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "test/gemini/ICLR2022.test.gemini-1.5-pro-002.csv",
+        "rows": 3896,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1948,
+          "0": 1948
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3896,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3398,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3896,
+          "unique_non_null": 1948,
+          "duplicate_non_null_rows": 1948,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3896,
+          "unique_non_null": 3896,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1948
+        },
+        "review_ids_associated_with_multiple_labels": 1948,
+        "subset": "test",
+        "generator_folder": "gemini",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "test/gpt4o/ICLR2022.test.gpt-4o.csv",
+        "rows": 3900,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1950,
+          "0": 1950
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3900,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3402,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3900,
+          "unique_non_null": 1950,
+          "duplicate_non_null_rows": 1950,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3900,
+          "unique_non_null": 3900,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1950
+        },
+        "review_ids_associated_with_multiple_labels": 1950,
+        "subset": "test",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "test/llama/ICLR2022.test.llama-3.1-70b.csv",
+        "rows": 3898,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1949,
+          "0": 1949
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3898,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3400,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3898,
+          "unique_non_null": 1949,
+          "duplicate_non_null_rows": 1949,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3898,
+          "unique_non_null": 3898,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1949
+        },
+        "review_ids_associated_with_multiple_labels": 1949,
+        "subset": "test",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "test/qwen/ICLR2022.test.qwen2.5-72b.csv",
+        "rows": 3838,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "main_review",
+          "summary_of_the_review",
+          "correctness",
+          "technical_novelty_and_significance",
+          "empirical_novelty_and_significance",
+          "flag_for_ethics_review",
+          "recommendation",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1919,
+          "0": 1919
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3838,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3340,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3838,
+          "unique_non_null": 1919,
+          "duplicate_non_null_rows": 1919,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3838,
+          "unique_non_null": 3838,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1919
+        },
+        "review_ids_associated_with_multiple_labels": 1919,
+        "subset": "test",
+        "generator_folder": "qwen",
+        "conference_year": "ICLR2022"
+      },
+      {
+        "file": "test/claude/ICLR2023.test.claude-sonnet-3.5v2.csv",
+        "rows": 3816,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "strength_and_weaknesses",
+          "clarity_quality_novelty_and_reproducibility",
+          "summary_of_the_review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1908,
+          "0": 1908
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3816,
+          "unique_non_null": 499,
+          "duplicate_non_null_rows": 3317,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 1908,
+          "duplicate_non_null_rows": 1908,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 3816,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1908
+        },
+        "review_ids_associated_with_multiple_labels": 1908,
+        "subset": "test",
+        "generator_folder": "claude",
+        "conference_year": "ICLR2023"
+      },
+      {
+        "file": "test/gemini/ICLR2023.test.gemini-1.5-pro-002.csv",
+        "rows": 3816,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "strength_and_weaknesses",
+          "clarity_quality_novelty_and_reproducibility",
+          "summary_of_the_review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1908,
+          "0": 1908
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3816,
+          "unique_non_null": 499,
+          "duplicate_non_null_rows": 3317,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 1908,
+          "duplicate_non_null_rows": 1908,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 3816,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1908
+        },
+        "review_ids_associated_with_multiple_labels": 1908,
+        "subset": "test",
+        "generator_folder": "gemini",
+        "conference_year": "ICLR2023"
+      },
+      {
+        "file": "test/gpt4o/ICLR2023.test.gpt-4o.csv",
+        "rows": 3816,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary_of_the_paper",
+          "strength_and_weaknesses",
+          "clarity_quality_novelty_and_reproducibility",
+          "summary_of_the_review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1908,
+          "0": 1908
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3816,
+          "unique_non_null": 499,
+          "duplicate_non_null_rows": 3317,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 1908,
+          "duplicate_non_null_rows": 1908,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 3816,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1908
+        },
+        "review_ids_associated_with_multiple_labels": 1908,
+        "subset": "test",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2023"
+      },
+      {
+        "file": "test/llama/ICLR2023.test.llama-3.1-70b.csv",
+        "rows": 3814,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "strength_and_weaknesses",
+          "clarity_quality_novelty_and_reproducibility",
+          "summary_of_the_review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1907,
+          "0": 1907
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3814,
+          "unique_non_null": 499,
+          "duplicate_non_null_rows": 3315,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3814,
+          "unique_non_null": 1907,
+          "duplicate_non_null_rows": 1907,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3814,
+          "unique_non_null": 3814,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1907
+        },
+        "review_ids_associated_with_multiple_labels": 1907,
+        "subset": "test",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2023"
+      },
+      {
+        "file": "test/qwen/ICLR2023.test.qwen2.5-72b.csv",
+        "rows": 3816,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary_of_the_paper",
+          "strength_and_weaknesses",
+          "clarity_quality_novelty_and_reproducibility",
+          "summary_of_the_review",
+          "rating",
+          "confidence"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1908,
+          "0": 1908
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3816,
+          "unique_non_null": 499,
+          "duplicate_non_null_rows": 3317,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 1908,
+          "duplicate_non_null_rows": 1908,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 3816,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1908
+        },
+        "review_ids_associated_with_multiple_labels": 1908,
+        "subset": "test",
+        "generator_folder": "qwen",
+        "conference_year": "ICLR2023"
+      },
+      {
+        "file": "test/claude/ICLR2024.test.claude-sonnet-3.5v2.csv",
+        "rows": 3820,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "rating",
+          "confidence",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1910,
+          "0": 1910
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3820,
+          "unique_non_null": 497,
+          "duplicate_non_null_rows": 3323,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3820,
+          "unique_non_null": 1910,
+          "duplicate_non_null_rows": 1910,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3820,
+          "unique_non_null": 3820,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1910
+        },
+        "review_ids_associated_with_multiple_labels": 1910,
+        "subset": "test",
+        "generator_folder": "claude",
+        "conference_year": "ICLR2024"
+      },
+      {
+        "file": "test/gemini/ICLR2024.test.gemini-1.5-pro-002.csv",
+        "rows": 3784,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "rating",
+          "confidence",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1892,
+          "0": 1892
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3784,
+          "unique_non_null": 497,
+          "duplicate_non_null_rows": 3287,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3784,
+          "unique_non_null": 1892,
+          "duplicate_non_null_rows": 1892,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3784,
+          "unique_non_null": 3784,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1892
+        },
+        "review_ids_associated_with_multiple_labels": 1892,
+        "subset": "test",
+        "generator_folder": "gemini",
+        "conference_year": "ICLR2024"
+      },
+      {
+        "file": "test/gpt4o/ICLR2024.test.gpt-4o.csv",
+        "rows": 3822,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "rating",
+          "confidence",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1911,
+          "0": 1911
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3822,
+          "unique_non_null": 497,
+          "duplicate_non_null_rows": 3325,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3822,
+          "unique_non_null": 1911,
+          "duplicate_non_null_rows": 1911,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3822,
+          "unique_non_null": 3822,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1911
+        },
+        "review_ids_associated_with_multiple_labels": 1911,
+        "subset": "test",
+        "generator_folder": "gpt4o",
+        "conference_year": "ICLR2024"
+      },
+      {
+        "file": "test/llama/ICLR2024.test.llama-3.1-70b.csv",
+        "rows": 3816,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "rating",
+          "confidence",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1908,
+          "0": 1908
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3816,
+          "unique_non_null": 497,
+          "duplicate_non_null_rows": 3319,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 1908,
+          "duplicate_non_null_rows": 1908,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3816,
+          "unique_non_null": 3816,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1908
+        },
+        "review_ids_associated_with_multiple_labels": 1908,
+        "subset": "test",
+        "generator_folder": "llama",
+        "conference_year": "ICLR2024"
+      },
+      {
+        "file": "test/qwen/ICLR2024.test.qwen2.5-72b.csv",
+        "rows": 3800,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "rating",
+          "confidence",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1900,
+          "0": 1900
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3800,
+          "unique_non_null": 495,
+          "duplicate_non_null_rows": 3305,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3800,
+          "unique_non_null": 1900,
+          "duplicate_non_null_rows": 1900,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3800,
+          "unique_non_null": 3800,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1900
+        },
+        "review_ids_associated_with_multiple_labels": 1900,
+        "subset": "test",
+        "generator_folder": "qwen",
+        "conference_year": "ICLR2024"
+      },
+      {
+        "file": "test/claude/NeurIPS2021.test.claude-sonnet-3.5v2.csv",
+        "rows": 3884,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1942,
+          "0": 1942
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3884,
+          "unique_non_null": 493,
+          "duplicate_non_null_rows": 3391,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 1942,
+          "duplicate_non_null_rows": 1942,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 3884,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1942
+        },
+        "review_ids_associated_with_multiple_labels": 1942,
+        "subset": "test",
+        "generator_folder": "claude",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "test/gemini/NeurIPS2021.test.gemini-1.5-pro-002.csv",
+        "rows": 3884,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1942,
+          "0": 1942
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3884,
+          "unique_non_null": 493,
+          "duplicate_non_null_rows": 3391,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 1942,
+          "duplicate_non_null_rows": 1942,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 3884,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1942
+        },
+        "review_ids_associated_with_multiple_labels": 1942,
+        "subset": "test",
+        "generator_folder": "gemini",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "test/gpt4o/NeurIPS2021.test.gpt-4o.csv",
+        "rows": 3884,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1942,
+          "0": 1942
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3884,
+          "unique_non_null": 493,
+          "duplicate_non_null_rows": 3391,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 1942,
+          "duplicate_non_null_rows": 1942,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 3884,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1942
+        },
+        "review_ids_associated_with_multiple_labels": 1942,
+        "subset": "test",
+        "generator_folder": "gpt4o",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "test/llama/NeurIPS2021.test.llama-3.1-70b.csv",
+        "rows": 3884,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1942,
+          "0": 1942
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3884,
+          "unique_non_null": 493,
+          "duplicate_non_null_rows": 3391,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 1942,
+          "duplicate_non_null_rows": 1942,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 3884,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1942
+        },
+        "review_ids_associated_with_multiple_labels": 1942,
+        "subset": "test",
+        "generator_folder": "llama",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "test/qwen/NeurIPS2021.test.qwen2.5-72b.csv",
+        "rows": 3884,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "main_review",
+          "limitations_and_societal_impact",
+          "rating",
+          "confidence",
+          "needs_ethics_review",
+          "ethics_review_area",
+          "time_spent_reviewing",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1942,
+          "0": 1942
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3884,
+          "unique_non_null": 493,
+          "duplicate_non_null_rows": 3391,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 1942,
+          "duplicate_non_null_rows": 1942,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3884,
+          "unique_non_null": 3884,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1942
+        },
+        "review_ids_associated_with_multiple_labels": 1942,
+        "subset": "test",
+        "generator_folder": "qwen",
+        "conference_year": "NeurIPS2021"
+      },
+      {
+        "file": "test/claude/NeurIPS2024.test.claude-sonnet-3.5v2.csv",
+        "rows": 3926,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "limitations",
+          "ethics_flag",
+          "rating",
+          "confidence",
+          "soundness",
+          "presentation",
+          "contribution",
+          "ethics_review_area",
+          "flag_for_ethics_review",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1963,
+          "0": 1963
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3926,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3426,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3926,
+          "unique_non_null": 1963,
+          "duplicate_non_null_rows": 1963,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3926,
+          "unique_non_null": 3926,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1963
+        },
+        "review_ids_associated_with_multiple_labels": 1963,
+        "subset": "test",
+        "generator_folder": "claude",
+        "conference_year": "NeurIPS2024"
+      },
+      {
+        "file": "test/gemini/NeurIPS2024.test.gemini-1.5-pro-002.csv",
+        "rows": 3914,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "limitations",
+          "ethics_flag",
+          "rating",
+          "confidence",
+          "soundness",
+          "presentation",
+          "contribution",
+          "ethics_review_area",
+          "strengths.Originality",
+          "strengths.Quality",
+          "strengths.Clarity",
+          "strengths.Significance",
+          "weaknesses.Originality",
+          "weaknesses.Quality",
+          "weaknesses.Clarity",
+          "weaknesses.Significance",
+          "flag_for_ethics_review",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1957,
+          "0": 1957
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3914,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3414,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3914,
+          "unique_non_null": 1957,
+          "duplicate_non_null_rows": 1957,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3914,
+          "unique_non_null": 3914,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1957
+        },
+        "review_ids_associated_with_multiple_labels": 1957,
+        "subset": "test",
+        "generator_folder": "gemini",
+        "conference_year": "NeurIPS2024"
+      },
+      {
+        "file": "test/gpt4o/NeurIPS2024.test.gpt-4o.csv",
+        "rows": 3926,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "limitations",
+          "ethics_flag",
+          "ethics_review_area",
+          "rating",
+          "confidence",
+          "soundness",
+          "presentation",
+          "contribution",
+          "flag_for_ethics_review",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1963,
+          "0": 1963
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3926,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3426,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3926,
+          "unique_non_null": 1963,
+          "duplicate_non_null_rows": 1963,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3926,
+          "unique_non_null": 3926,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1963
+        },
+        "review_ids_associated_with_multiple_labels": 1963,
+        "subset": "test",
+        "generator_folder": "gpt4o",
+        "conference_year": "NeurIPS2024"
+      },
+      {
+        "file": "test/llama/NeurIPS2024.test.llama-3.1-70b.csv",
+        "rows": 3912,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "limitations",
+          "ethics_flag",
+          "rating",
+          "confidence",
+          "soundness",
+          "presentation",
+          "contribution",
+          "ethics_review_area",
+          "strengths.strength_1",
+          "strengths.strength_2",
+          "strengths.strength_3",
+          "strengths.strength_4",
+          "strengths.strength_5",
+          "weaknesses.weakness_1",
+          "weaknesses.weakness_2",
+          "weaknesses.weakness_3",
+          "questions.question_1",
+          "questions.question_2",
+          "questions.question_3",
+          "limitations.limitation_1",
+          "limitations.limitation_2",
+          "limitations.limitation_3",
+          "flag_for_ethics_review",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1956,
+          "0": 1956
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3912,
+          "unique_non_null": 500,
+          "duplicate_non_null_rows": 3412,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3912,
+          "unique_non_null": 1956,
+          "duplicate_non_null_rows": 1956,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3912,
+          "unique_non_null": 3912,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1956
+        },
+        "review_ids_associated_with_multiple_labels": 1956,
+        "subset": "test",
+        "generator_folder": "llama",
+        "conference_year": "NeurIPS2024"
+      },
+      {
+        "file": "test/qwen/NeurIPS2024.test.qwen2.5-72b.csv",
+        "rows": 3880,
+        "columns": [
+          "label",
+          "custom_id",
+          "PaperId",
+          "review-id",
+          "conference",
+          "summary",
+          "strengths",
+          "weaknesses",
+          "questions",
+          "limitations",
+          "ethics_flag",
+          "rating",
+          "confidence",
+          "soundness",
+          "presentation",
+          "contribution",
+          "ethics_review_area",
+          "flag_for_ethics_review",
+          "code_of_conduct"
+        ],
+        "missing_required_columns": [
+          "review"
+        ],
+        "label_counts": {
+          "1": 1940,
+          "0": 1940
+        },
+        "observed_labels": [
+          0,
+          1
+        ],
+        "labels_match_expected_binary_values": true,
+        "missing_labels": 0,
+        "PaperId_stats": {
+          "non_null": 3880,
+          "unique_non_null": 498,
+          "duplicate_non_null_rows": 3382,
+          "dtype": "int64"
+        },
+        "review-id_stats": {
+          "non_null": 3880,
+          "unique_non_null": 1940,
+          "duplicate_non_null_rows": 1940,
+          "dtype": "str"
+        },
+        "custom_id_stats": {
+          "non_null": 3880,
+          "unique_non_null": 3880,
+          "duplicate_non_null_rows": 0,
+          "dtype": "str"
+        },
+        "review_id_label_patterns": {
+          "(0, 1)": 1940
+        },
+        "review_ids_associated_with_multiple_labels": 1940,
+        "subset": "test",
+        "generator_folder": "qwen",
+        "conference_year": "NeurIPS2024"
+      }
+    ],
+    "subset_summaries": {
+      "calibration": {
+        "files_inspected": 15,
+        "raw_rows_across_files": 57590,
+        "label_counts_across_files": {
+          "1": 28795,
+          "0": 28795
+        },
+        "files_missing_review_column": 10,
+        "missing_or_empty_review_cells": 0,
+        "note": "Raw totals may count repeated human reviews in multiple generator files."
+      },
+      "extended": {
+        "files_inspected": 11,
+        "raw_rows_across_files": 274244,
+        "label_counts_across_files": {
+          "1": 137122,
+          "0": 137122
+        },
+        "files_missing_review_column": 10,
+        "missing_or_empty_review_cells": 0,
+        "note": "Raw totals may count repeated human reviews in multiple generator files."
+      },
+      "test": {
+        "files_inspected": 30,
+        "raw_rows_across_files": 115722,
+        "label_counts_across_files": {
+          "1": 57861,
+          "0": 57861
+        },
+        "files_missing_review_column": 25,
+        "missing_or_empty_review_cells": 0,
+        "note": "Raw totals may count repeated human reviews in multiple generator files."
+      }
+    },
+    "overlap_audits": {
+      "ICLR2021": {
+        "calibration": {
+          "unique_human_review_ids": 1914,
+          "unique_human_review_texts": 1914,
+          "unique_paper_ids": 500
+        },
+        "test": {
+          "unique_human_review_ids": 1921,
+          "unique_human_review_texts": 1921,
+          "unique_paper_ids": 498
+        },
+        "extended": {
+          "unique_human_review_ids": 5558,
+          "unique_human_review_texts": 5558,
+          "unique_paper_ids": 1434
+        },
+        "calibration_vs_test": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "calibration_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "test_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        }
+      },
+      "ICLR2022": {
+        "calibration": {
+          "unique_human_review_ids": 1941,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 500
+        },
+        "test": {
+          "unique_human_review_ids": 1950,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 498
+        },
+        "extended": {
+          "unique_human_review_ids": 6130,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 1575
+        },
+        "calibration_vs_test": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "calibration_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "test_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        }
+      },
+      "ICLR2023": {
+        "calibration": {
+          "unique_human_review_ids": 0,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 0
+        },
+        "test": {
+          "unique_human_review_ids": 1908,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 499
+        },
+        "extended": {
+          "unique_human_review_ids": 12373,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 3277
+        },
+        "calibration_vs_test": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "calibration_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "test_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        }
+      },
+      "ICLR2024": {
+        "calibration": {
+          "unique_human_review_ids": 0,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 0
+        },
+        "test": {
+          "unique_human_review_ids": 1911,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 497
+        },
+        "extended": {
+          "unique_human_review_ids": 25948,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 6721
+        },
+        "calibration_vs_test": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "calibration_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "test_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        }
+      },
+      "NeurIPS2021": {
+        "calibration": {
+          "unique_human_review_ids": 1915,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 500
+        },
+        "test": {
+          "unique_human_review_ids": 1942,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 493
+        },
+        "extended": {
+          "unique_human_review_ids": 6728,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 1736
+        },
+        "calibration_vs_test": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "calibration_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "test_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        }
+      },
+      "NeurIPS2024": {
+        "calibration": {
+          "unique_human_review_ids": 0,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 0
+        },
+        "test": {
+          "unique_human_review_ids": 1963,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 500
+        },
+        "extended": {
+          "unique_human_review_ids": 14640,
+          "unique_human_review_texts": 0,
+          "unique_paper_ids": 3726
+        },
+        "calibration_vs_test": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "calibration_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        },
+        "test_vs_extended": {
+          "shared_human_review_ids": 0,
+          "shared_human_review_texts": 0,
+          "shared_paper_ids": 0
+        }
+      }
+    },
+    "errors": [
+      {
+        "file": "extended/llama/ICLR2021.extended.llama-3.1-70b.csv",
+        "error": "LocalEntryNotFoundError('An error happened while trying to locate the file on the Hub and we cannot find the requested files in the local cache. Please check your connection and try again or make sure your Internet connection is on.')"
+      }
+    ],
+    "inspection_scope": {
+      "conference_year_filter": [
+        "ICLR2021",
+        "ICLR2022",
+        "ICLR2023",
+        "ICLR2024",
+        "NeurIPS2021",
+        "NeurIPS2024"
+      ],
+      "subsets": [
+        "calibration",
+        "test",
+        "extended"
+      ],
+      "files_selected": 57,
+      "files_successfully_inspected": 56,
+      "failed_files": 1
+    }
+  }
+}
