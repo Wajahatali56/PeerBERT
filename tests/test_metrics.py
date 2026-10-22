@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.evaluation.aggregate import by_generator, comparison_row, save_comparison_table, seed_summary
+from src.evaluation.aggregate import (
+    by_generator, by_length_bin, comparison_row, save_comparison_table, seed_summary,
+)
 from src.evaluation.error_analysis import error_breakdown, fp_fn_tables
 from src.evaluation.metrics import binary_metrics, calibrate_threshold, multiclass_metrics, tpr_at_fpr
 from src.evaluation.predict import binary_view, prediction_frame, softmax
@@ -84,6 +86,12 @@ def test_by_generator_shares_humans():
     })
     r = by_generator(pred)
     assert r["a"]["n"] == 2 and r["b"]["n"] == 3
+
+
+def test_length_bins_cover_every_row():
+    pred = pd.DataFrame({"label": [0, 1] * 6, "score": np.linspace(0, 1, 12)})
+    r = by_length_bin(pred, np.arange(100, 1300, 100))
+    assert len(r) == 3 and sum(v["n"] for v in r.values()) == 12
 
 
 def test_seed_summary_and_table(tmp_path):

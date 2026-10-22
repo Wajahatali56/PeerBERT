@@ -39,9 +39,9 @@ def parse():
     return ap.parse_args()
 
 
-def evaluate_split(pred, dataset, val_thr, n_boot, seed):
+def evaluate_split(pred, dataset, val_thr, n_boot, seed, n_words=None):
     """pred: prediction frame for one split -> metrics dict."""
-    from src.evaluation.aggregate import by_generator, by_group
+    from src.evaluation.aggregate import by_generator, by_group, by_length_bin
     from src.evaluation.metrics import binary_metrics, multiclass_metrics
     from src.evaluation.predict import binary_view
     from src.evaluation.stats import auc_fn, cluster_bootstrap_ci, macro_f1_fn
@@ -58,6 +58,8 @@ def evaluate_split(pred, dataset, val_thr, n_boot, seed):
     out["binary_note"] = ("human/ai rows only; rewrite excluded; score = P(ai)/(P(human)+P(ai))"
                           if dataset == "semdetect" else "positive class = AI")
     out["by_conf_year@0.5"] = by_group(b, "conf_year")
+    if n_words is not None:
+        out["by_length_tercile@0.5"] = by_length_bin(b, b["row_id"].map(n_words).values)
     if dataset == "intellabs":
         out["by_generator@0.5"] = by_generator(b)
     if n_boot:
@@ -120,7 +122,8 @@ def main():
                 pred = prediction_frame(man, proba=proba, class_names=names)
                 save_predictions(pred, pp)
                 save_json(trunc, pp.with_suffix(".truncation.json"))
-            m = evaluate_split(pred, ds, val_thr, args.n_boot if split != "test_baseline" else 0, seed)
+            n_words = pd.Series(man["text"].str.split().str.len().values, index=man["row_id"].values)
+            m = evaluate_split(pred, ds, val_thr, args.n_boot if split != "test_baseline" else 0, seed, n_words)
             m["truncation"] = trunc
             seed_out["splits"][split] = m
             print(f"[eval] seed {seed} {split}: binary@0.5 macro_f1={m['binary@0.5']['macro_f1']} "

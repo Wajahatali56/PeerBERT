@@ -28,6 +28,26 @@ def by_group(pred, col, threshold=0.5, min_neg_events=10):
     return out
 
 
+def by_length_bin(pred, n_words, threshold=0.5, n_bins=3, min_neg_events=10):
+    """
+    Metrics per review-length bin (equal-sized quantile bins of word count on this split), to
+    check that performance does not hinge on length (cf. CoCoDet, Table 11).
+    n_words: Series aligned with pred.
+    """
+    words = np.asarray(n_words, dtype=float)
+    edges = np.unique(np.quantile(words, np.linspace(0, 1, n_bins + 1)))
+    if len(edges) < 2:
+        return {}
+    bins = np.clip(np.searchsorted(edges, words, side="right") - 1, 0, len(edges) - 2)
+    out = {}
+    for b in range(len(edges) - 1):
+        sub = pred[bins == b]
+        if len(sub):
+            key = f"{int(edges[b])}-{int(edges[b + 1])} words"
+            out[key] = headline(binary_metrics(sub["label"], sub["score"], threshold, min_neg_events))
+    return out
+
+
 def by_generator(pred, threshold=0.5, min_neg_events=10):
     out = {}
     ai = pred[pred["label"] == 1]
