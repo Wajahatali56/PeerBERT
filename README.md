@@ -27,6 +27,16 @@ artefacts that exist and marks everything else as **NOT RUN**.
 
 ## Running on Google Colab (recommended)
 
+### One notebook for everything
+`notebooks/PeerBERT_full_experiments.ipynb` is self-contained: it writes the project code into
+the runtime (no clone needed). It then runs every experiment and shows tables, figures and a
+short analysis after each one. Open it in Colab, choose a T4 GPU, and use **Run all**.
+- Figures are saved as PNG and PDF under `outputs/results/figures`.
+- The notebook is generated from this repository; rebuild it with
+  `python notebooks/make_full_notebook.py` after changing any code.
+
+### Step-by-step runner
+
 Open `notebooks/kaggle_runner.ipynb` in Colab, select a T4 GPU, and run the cells top to bottom.
 - Outputs are written to `MyDrive/PeerBERT_outputs`.
 - After a disconnect, run cells 1-4 again and continue. Finished steps are skipped and
