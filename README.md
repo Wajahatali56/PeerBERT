@@ -19,11 +19,23 @@ The two datasets are never mixed. Only the real files and their real labels are 
 
 | Step | Status |
 |---|---|
-| Unit tests on toy data (`pytest tests`) | run in development (CPU, no network) |
+| Code tests (`pytest tests`): small hand-written examples and tiny random models, CPU only | pass on Python 3.13 with transformers 4.48.3 and 5.20, pandas 2.2 and 3.0; every file compiles on Python 3.10/3.11 |
 | Real-data loading, audit, training, evaluation, baselines | **not run yet**: needs Colab/Kaggle with Hugging Face access and a GPU |
 
 Every result file is produced by the scripts below. `scripts/09_build_report.py` only reports
 artefacts that exist and marks everything else as **NOT RUN**.
+
+## Running on Google Colab (recommended)
+
+Open `notebooks/kaggle_runner.ipynb` in Colab, select a T4 GPU, and run the cells top to bottom.
+- Outputs are written to `MyDrive/PeerBERT_outputs`.
+- After a disconnect, run cells 1-4 again and continue. Finished steps are skipped and
+  training resumes from its last epoch.
+- The same notebook also runs on Kaggle, where outputs go to `/kaggle/working`.
+
+If training runs out of GPU memory, edit `configs/train.yaml`:
+1. Lower `training.batch_size` and raise `grad_accum`.
+2. Or set `training.gradient_checkpointing: true`.
 
 ## Pipeline
 
@@ -96,6 +108,11 @@ are cached. Train on a single GPU (`--gpu`, sets `CUDA_VISIBLE_DEVICES` before t
   - ModernBERT's default dropout is 0.0, so dropout is set to 0.1. The trainer asserts that the
     two train-mode passes differ.
 - Final configuration: 3 seeds, mean +/- std. Ablations are selected on validation only.
+- The ablation also includes the cost-sensitive margin loss of CoCoDet (Chen et al., ACL 2026)
+  on a cosine classification head (`csm_cosine`):
+  - margins m_base = m_cost = 0.25 and scale s = 30, as in that paper;
+  - the cost margin targets human <-> AI confusions.
+  CoCoDet itself is not a baseline.
 
 ## Baselines (`src/baselines`, `configs/baselines.yaml`)
 
@@ -123,6 +140,8 @@ For rewrite rows, only a descriptive "fraction flagged as AI" is reported.
 - **Statistics**: paper-level cluster bootstrap CIs, paired tests on shared rows, McNemar, and
   Holm correction.
 - **Error analysis**: FP/FN tables and per-class / per-conference-year breakdowns.
+- **Length check**: metrics per review-length tercile (word count), to show performance does not
+  depend on review length.
 - **Outputs**: `outputs/results/{intellabs,sem_detect}/`, including `comparison_table.{csv,json}`.
 
 ## Explainability (`src/xai`, `scripts/10_explain.py`)
