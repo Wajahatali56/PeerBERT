@@ -6,6 +6,11 @@ L_cls  classification loss, one of
        weighted_ce      cross-entropy with w_c = N / (K * n_c), counts from the TRAIN split only
        label_smoothing  weighted cross-entropy with label smoothing (default 0.05)
        focal            weighted focal loss, gamma = 2 (Lin et al., 2017)
+       csm              cost-sensitive margin loss adapted from CoCoDet (Chen et al., ACL 2026):
+                        on cosine logits z_j, the true class gets z_y - m_base and, when the
+                        true and the competing class are both critical (human, ai), the
+                        competing logit gets + m_cost; cross-entropy on s * z. Needs the
+                        cosine classification head (model.head: cosine). Unweighted, as in the paper.
 L_cons R-Drop consistency (Liang et al., NeurIPS 2021): symmetric KL between the
        predictive distributions of two stochastic (dropout) passes of the same batch.
        With R-Drop on, L_cls is the mean of the two passes' losses, as in R-Drop.
@@ -15,7 +20,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-LOSS_TYPES = ("ce", "weighted_ce", "label_smoothing", "focal")
+LOSS_TYPES = ("ce", "weighted_ce", "label_smoothing", "focal", "csm")
+CRITICAL_CLASSES = (0, 1)      # human, ai: confusing these two is the costly error
 
 
 def class_weights(train_labels, num_classes):
@@ -37,8 +43,27 @@ def focal_loss(logits, target, gamma=2.0, weight=None):
     return (w * loss).sum() / w.sum()           # same normalisation as weighted F.cross_entropy
 
 
-def classification_loss(logits, target, kind="weighted_ce", weight=None, smoothing=0.05, gamma=2.0):
+def csm_logits(cos, target, scale=30.0, m_base=0.25, m_cost=0.25, critical=CRITICAL_CLASSES):
+    """Margin-adjusted, scaled logits from cosine similarities (CoCoDet Eq. 1-2)."""
+    z = cos.float().clone()
+    rows = torch.arange(len(target), device=z.device)
+    z[rows, target] = z[rows, target] - m_base
+    for c in critical:
+        for d in critical:
+            if c != d and d < z.shape[1]:
+                z[target == c, d] = z[target == c, d] + m_cost
+    return scale * z
+
+
+def classification_loss(logits, target, kind="weighted_ce", weight=None, smoothing=0.05, gamma=2.0,
+                        csm=None):
     logits = logits.float()
+    if kind == "csm":
+        c = csm or {}
+        scale = float(c.get("scale", 30.0))
+        cos = logits / scale                       # the cosine head outputs scale * cos
+        return F.cross_entropy(csm_logits(cos, target, scale, float(c.get("m_base", 0.25)),
+                                          float(c.get("m_cost", 0.25))), target)
     w = weight.to(logits.device) if weight is not None else None
     if kind == "ce":
         return F.cross_entropy(logits, target)
@@ -60,13 +85,13 @@ def rdrop_kl(logits1, logits2):
 
 
 class PeerBERTLoss:
-    def __init__(self, kind="weighted_ce", weight=None, rdrop_alpha=0.0, smoothing=0.05, gamma=2.0):
+    def __init__(self, kind="weighted_ce", weight=None, rdrop_alpha=0.0, smoothing=0.05, gamma=2.0, csm=None):
         if kind not in LOSS_TYPES:
             raise ValueError(f"unknown loss '{kind}'")
-        if kind == "ce":
+        if kind in ("ce", "csm"):
             weight = None
         self.kind, self.weight, self.alpha = kind, weight, float(rdrop_alpha)
-        self.smoothing, self.gamma = smoothing, gamma
+        self.smoothing, self.gamma, self.csm = smoothing, gamma, csm
 
     @property
     def uses_rdrop(self):
@@ -74,12 +99,12 @@ class PeerBERTLoss:
 
     def __call__(self, logits1, target, logits2=None):
         """Returns (total, parts dict). logits2 is required when R-Drop is on."""
-        cls1 = classification_loss(logits1, target, self.kind, self.weight, self.smoothing, self.gamma)
+        cls1 = classification_loss(logits1, target, self.kind, self.weight, self.smoothing, self.gamma, self.csm)
         if not self.uses_rdrop:
             return cls1, {"cls": float(cls1.detach()), "cons": 0.0}
         if logits2 is None:
             raise ValueError("R-Drop needs two stochastic passes")
-        cls2 = classification_loss(logits2, target, self.kind, self.weight, self.smoothing, self.gamma)
+        cls2 = classification_loss(logits2, target, self.kind, self.weight, self.smoothing, self.gamma, self.csm)
         cls = 0.5 * (cls1 + cls2)
         cons = rdrop_kl(logits1, logits2)
         return cls + self.alpha * cons, {"cls": float(cls.detach()), "cons": float(cons.detach())}

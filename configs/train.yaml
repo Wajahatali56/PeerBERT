@@ -8,16 +8,19 @@ model:
   # dropout_on=true sets every *_dropout field that exists in the config to `dropout`.
   dropout_on: true
   dropout: 0.1
+  head: linear                # linear | cosine (cosine is required by the csm loss)
+  cosine_scale: 30.0          # s in CoCoDet's cosine head
 
 training:
   seeds: [42, 43, 44]         # final configuration: mean +/- std over these seeds
-  epochs: 4
+  epochs: 3
   lr: 3.0e-5
   weight_decay: 0.01
   warmup_ratio: 0.06
-  batch_size: 8               # per step; effective batch = batch_size * grad_accum
-  grad_accum: 4
-  eval_batch_size: 32
+  batch_size: 4               # per step; effective batch = batch_size * grad_accum = 32
+  grad_accum: 8               # sized for a 16 GB T4 with R-Drop (two forward passes)
+  eval_batch_size: 16
+  gradient_checkpointing: false   # set true if a GPU runs out of memory (slower, less memory)
   max_grad_norm: 1.0
   early_stopping_patience: 2  # epochs without val Macro-F1 improvement
   max_bad_steps: 20           # consecutive non-finite losses before aborting
@@ -26,9 +29,11 @@ training:
   gpu_id: 0                   # single GPU; set before torch is imported
 
 loss:
-  type: weighted_ce           # ce | weighted_ce | label_smoothing | focal
+  type: weighted_ce           # ce | weighted_ce | label_smoothing | focal | csm
   label_smoothing: 0.05
   focal_gamma: 2.0
+  csm_base_margin: 0.25       # CoCoDet m_base
+  csm_cost_margin: 0.25       # CoCoDet m_cost (human <-> ai confusions)
   rdrop_alpha: 1.0            # 0 disables R-Drop (L_cons)
 
 threshold:
@@ -45,3 +50,4 @@ ablation:
     - {name: rdrop_0.5,         loss: {type: weighted_ce,     rdrop_alpha: 0.5}}
     - {name: rdrop_1.0,         loss: {type: weighted_ce,     rdrop_alpha: 1.0}}
     - {name: dropout_off,       loss: {type: weighted_ce,     rdrop_alpha: 0.0}, model: {dropout_on: false}}
+    - {name: csm_cosine,        loss: {type: csm,             rdrop_alpha: 0.0}, model: {head: cosine}}

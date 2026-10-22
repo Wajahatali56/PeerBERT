@@ -26,11 +26,11 @@ WORDS = ("the paper proposes a method novel results strong weak experiments clar
          "accept reject review model data training evaluation human ai rewrite").split()
 
 
-def _tokenizer():
+def _tokenizer(words=WORDS):
     from tokenizers import Tokenizer, models, pre_tokenizers, processors
     from transformers import PreTrainedTokenizerFast
     specials = ["[PAD]", "[UNK]", "[CLS]", "[SEP]", "[MASK]"]
-    vocab = {t: i for i, t in enumerate(specials + WORDS)}
+    vocab = {t: i for i, t in enumerate(specials + list(words))}
     tk = Tokenizer(models.WordLevel(vocab, unk_token="[UNK]"))
     tk.pre_tokenizer = pre_tokenizers.Whitespace()
     tk.post_processor = processors.TemplateProcessing(single="[CLS] $A [SEP]",
@@ -105,6 +105,44 @@ def test_losses():
     assert total.item() == pytest.approx(parts["cls"] + parts["cons"], rel=1e-5)
     with pytest.raises(ValueError):
         loss(logits, y)
+
+
+def test_csm_margins_follow_cocodet():
+    from src.models.losses import classification_loss, csm_logits
+    cos = torch.tensor([[0.5, 0.2, 0.1], [0.1, 0.6, 0.3], [0.2, 0.1, 0.7]])
+    y = torch.tensor([0, 1, 2])
+    z = csm_logits(cos, y, scale=10.0, m_base=0.25, m_cost=0.25)
+    expected = torch.tensor([[0.25, 0.45, 0.1],     # true human: -m_base; competing ai: +m_cost
+                             [0.35, 0.35, 0.3],     # true ai: competing human +m_cost
+                             [0.2, 0.1, 0.45]]) * 10  # true rewrite: no cost margin
+    assert torch.allclose(z, expected)
+    loss = classification_loss(cos * 10, y, "csm", csm={"scale": 10.0})
+    assert loss.item() == pytest.approx(torch.nn.functional.cross_entropy(expected, y).item(), rel=1e-5)
+
+
+def test_cosine_head_roundtrip(tiny, tmp_path):
+    from src.models.modernbert_classifier import CosineHead, build_model, load_trained
+    model, tok, info = build_model(tiny["modernbert"], 3, ("human", "ai", "rewrite"), head="cosine", cosine_scale=20)
+    assert isinstance(model.hf.classifier, CosineHead) and info["head"] == "cosine"
+    model.eval()
+    ids = tok(["the paper proposes a method", "weak experiments"], padding=True, return_tensors="pt")
+    with torch.no_grad():
+        a = model(ids["input_ids"], ids["attention_mask"])
+    assert a.abs().max() <= 20 + 1e-4                     # |scale * cos| <= scale
+    model.save(tmp_path / "m", tok)
+    loaded, _ = load_trained(tmp_path / "m")
+    loaded.eval()
+    with torch.no_grad():
+        b = loaded(ids["input_ids"], ids["attention_mask"])
+    assert isinstance(loaded.hf.classifier, CosineHead) and torch.allclose(a, b, atol=1e-5)
+
+
+def test_binoculars_tokenizer_check(tiny):
+    from src.baselines.zero_shot.binoculars import check_tokenizers
+    check_tokenizers(tiny["tok"], tiny["tok"], ("the paper", "weak experiments"))
+    other = _tokenizer(WORDS[::-1])                        # same words, different token ids
+    with pytest.raises(ValueError, match="tokenise text differently"):
+        check_tokenizers(tiny["tok"], other, ("the paper",))
 
 
 # ---------------------------------------------------------------- trainer
@@ -312,8 +350,9 @@ def test_pipeline_scripts_end_to_end(tiny, tmp_path):
     run(S / "08_cross_dataset.py", "--source", "intellabs", "--train-config", tc_p)
     run(S / "08_cross_dataset.py", "--source", "semdetect", "--train-config", tc_p, "--seeds", "1")
     out = run(S / "07_run_ablation.py", "--dataset", "intellabs", "--train-config", tc_p, "--variants",
-              "ce_unweighted", "focal_weighted")
-    assert "ce_unweighted" in out
+              "ce_unweighted", "focal_weighted", "csm_cosine")
+    assert "ce_unweighted" in out and "csm_cosine" in out
+    run(S / "07_run_ablation.py", "--dataset", "semdetect", "--train-config", tc_p, "--variants", "csm_cosine")
     run(S / "09_build_report.py", "--n-boot", "20")
     run(S / "10_explain.py", "--dataset", "intellabs", "--train-config", tc_p, "--n-per-group", "2", "--n-steps", "8")
     run(S / "10_explain.py", "--dataset", "semdetect", "--train-config", tc_p, "--n-per-group", "1", "--n-steps", "8",
@@ -326,6 +365,8 @@ def test_pipeline_scripts_end_to_end(tiny, tmp_path):
     sd = json.loads((res / "sem_detect" / "baselines" / "logrank" / "metrics.json").read_text())
     assert sd["test_baseline@val_threshold"]["n"] == 8                  # 4 papers x human/ai only
     assert sd["rewrite_fraction_flagged_ai@val_threshold"]["n_rewrite"] == 4
+    m42 = json.loads(next((res / "intellabs" / "peerbert" / "final").glob("seed*/metrics.json")).read_text())
+    assert m42["splits"]["test"]["by_length_tercile@0.5"]
     ms = json.loads((res / "sem_detect" / "peerbert" / "final" / "metrics_summary.json").read_text())
     assert "native_3class" in ms["per_split"]["test"]
     assert (res / "report" / "intellabs_paired_tests.csv").exists()

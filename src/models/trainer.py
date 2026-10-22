@@ -152,8 +152,14 @@ def train_one(train_df, val_df, tcfg, dataset, out_dir, seed, resume=True):
     dtype = amp_dtype(tr.get("amp", "auto"), device)
     t0 = time.time()
 
+    head = mcfg.get("head", "linear")
+    if lcfg["type"] == "csm" and head != "cosine":
+        raise ValueError("loss 'csm' needs the cosine head: set model.head: cosine")
     model, tok, model_info = build_model(mcfg["name"], k, class_names, mcfg.get("dropout_on", True),
-                                         mcfg.get("dropout", 0.1))
+                                         mcfg.get("dropout", 0.1), head, mcfg.get("cosine_scale", 30.0))
+    if tr.get("gradient_checkpointing"):
+        model.hf.gradient_checkpointing_enable()
+        model_info["gradient_checkpointing"] = True
     model.to(device)
     ds_kw = dict(max_length=mcfg["max_length"], truncation=mcfg.get("truncation", "head"),
                  head_tokens=mcfg.get("head_tokens", 256))
@@ -162,7 +168,9 @@ def train_one(train_df, val_df, tcfg, dataset, out_dir, seed, resume=True):
 
     weights = class_weights(train_df["label"].values, k)
     loss_fn = PeerBERTLoss(lcfg["type"], weights, lcfg.get("rdrop_alpha", 0.0),
-                           lcfg.get("label_smoothing", 0.05), lcfg.get("focal_gamma", 2.0))
+                           lcfg.get("label_smoothing", 0.05), lcfg.get("focal_gamma", 2.0),
+                           {"scale": mcfg.get("cosine_scale", 30.0), "m_base": lcfg.get("csm_base_margin", 0.25),
+                            "m_cost": lcfg.get("csm_cost_margin", 0.25)})
     if loss_fn.uses_rdrop and not has_active_dropout(model.hf):
         raise RuntimeError("R-Drop is on but the model has no active dropout (set model.dropout_on: true)")
 
@@ -201,10 +209,17 @@ def train_one(train_df, val_df, tcfg, dataset, out_dir, seed, resume=True):
                 state["rdrop_passes_differ"] = passes_differ(model, batch)
                 if not state["rdrop_passes_differ"]:
                     raise RuntimeError("R-Drop: two train-mode passes are identical (dropout inactive)")
-            with torch.autocast(device_type=device.type, dtype=dtype or torch.float32, enabled=dtype is not None):
-                l1 = model(batch["input_ids"], batch["attention_mask"])
-                l2 = model(batch["input_ids"], batch["attention_mask"]) if loss_fn.uses_rdrop else None
-            loss, parts = loss_fn(l1, batch["labels"], l2)
+            try:
+                with torch.autocast(device_type=device.type, dtype=dtype or torch.float32,
+                                    enabled=dtype is not None):
+                    l1 = model(batch["input_ids"], batch["attention_mask"])
+                    l2 = model(batch["input_ids"], batch["attention_mask"]) if loss_fn.uses_rdrop else None
+                loss, parts = loss_fn(l1, batch["labels"], l2)
+            except torch.cuda.OutOfMemoryError as e:
+                raise RuntimeError(
+                    "CUDA out of memory. In configs/train.yaml lower training.batch_size (and raise "
+                    "grad_accum to keep the effective batch), set training.gradient_checkpointing: true, "
+                    "or reduce model.max_length. The run resumes from the last finished epoch.") from e
             if not torch.isfinite(loss):
                 state["skipped_nonfinite"] += 1
                 bad_in_row += 1

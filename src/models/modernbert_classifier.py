@@ -12,8 +12,14 @@ Version-robust choices (transformers changes quickly; features are detected, not
   uses an eager-attention copy.
 """
 
+import json
+from pathlib import Path
+
 import torch
+import torch.nn.functional as F
 from torch import nn
+
+HEAD_FILE = "peerbert_head.json"
 
 DROPOUT_FIELDS = ("embedding_dropout", "attention_dropout", "mlp_dropout", "classifier_dropout",
                   "hidden_dropout_prob", "attention_probs_dropout_prob")
@@ -21,6 +27,28 @@ DROPOUT_FIELDS = ("embedding_dropout", "attention_dropout", "mlp_dropout", "clas
 
 def dropout_values(config):
     return {f: getattr(config, f) for f in DROPOUT_FIELDS if getattr(config, f, None) is not None}
+
+
+class CosineHead(nn.Module):
+    """logits = scale * cos(features, class weight vectors) (large-margin cosine classifier)."""
+
+    def __init__(self, in_features, num_labels, scale=30.0):
+        super().__init__()
+        self.weight = nn.Parameter(torch.empty(num_labels, in_features))
+        nn.init.xavier_uniform_(self.weight)
+        self.scale = float(scale)
+
+    def forward(self, x):
+        return self.scale * F.linear(F.normalize(x, dim=-1), F.normalize(self.weight, dim=-1))
+
+
+def use_cosine_head(hf, scale):
+    old = hf.classifier
+    head = CosineHead(old.in_features, old.out_features, scale).to(old.weight.device)
+    with torch.no_grad():
+        head.weight.copy_(old.weight)
+    hf.classifier = head
+    return hf
 
 
 class PeerBERT(nn.Module):
@@ -39,11 +67,15 @@ class PeerBERT(nn.Module):
 
     def save(self, out_dir, tokenizer=None):
         self.hf.save_pretrained(out_dir)
+        head = self.hf.classifier
+        meta = ({"head": "cosine", "scale": head.scale} if isinstance(head, CosineHead) else {"head": "linear"})
+        (Path(out_dir) / HEAD_FILE).write_text(json.dumps(meta))
         if tokenizer is not None:
             tokenizer.save_pretrained(out_dir)
 
 
-def build_model(name_or_path, num_labels, class_names, dropout_on=True, dropout=0.1):
+def build_model(name_or_path, num_labels, class_names, dropout_on=True, dropout=0.1, head="linear",
+                cosine_scale=30.0):
     """Returns (PeerBERT, tokenizer, info dict with verified dropout before/after)."""
     from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer
 
@@ -61,8 +93,12 @@ def build_model(name_or_path, num_labels, class_names, dropout_on=True, dropout=
     # size (e.g. 2 vs 3 labels) is re-initialised instead of raising.
     hf = AutoModelForSequenceClassification.from_pretrained(name_or_path, config=config,
                                                             ignore_mismatched_sizes=True)
+    if head == "cosine":
+        use_cosine_head(hf, cosine_scale)
+    elif head != "linear":
+        raise ValueError(f"unknown head '{head}' (linear | cosine)")
     tok = AutoTokenizer.from_pretrained(name_or_path)
-    info = {"model": name_or_path, "model_type": config.model_type, "dropout_before": before,
+    info = {"model": name_or_path, "head": head, "model_type": config.model_type, "dropout_before": before,
             "dropout_after": dropout_values(hf.config),
             "reference_compile": getattr(hf.config, "reference_compile", "n/a"),
             "num_parameters": sum(p.numel() for p in hf.parameters())}
@@ -78,6 +114,10 @@ def load_trained(model_dir, eager_attention=False):
         config.reference_compile = False
     kwargs = {"attn_implementation": "eager"} if eager_attention else {}
     hf = AutoModelForSequenceClassification.from_pretrained(model_dir, config=config, **kwargs)
+    meta_p = Path(model_dir) / HEAD_FILE
+    meta = json.loads(meta_p.read_text()) if meta_p.exists() else {"head": "linear"}
+    if meta["head"] == "cosine":
+        use_cosine_head(hf, meta["scale"])     # classifier.weight was loaded into the Linear first
     return PeerBERT(hf), AutoTokenizer.from_pretrained(model_dir)
 
 
