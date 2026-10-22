@@ -30,6 +30,24 @@ def slug(name):
     return re.sub(r"[^A-Za-z0-9]+", "_", name).strip("_")
 
 
+def dtype_kwarg(torch_dtype):
+    """
+    from_pretrained kwargs that work across Colab images:
+    - `dtype=` on transformers >= 4.56, `torch_dtype=` before;
+    - low_cpu_mem_usage=True whenever accelerate is installed, so a large fp32 checkpoint
+      (e.g. gpt-neo-2.7B, ~10 GB) is cast while loading instead of being held twice in RAM.
+    """
+    import importlib.util
+
+    import transformers
+    from packaging.version import Version
+    key = "dtype" if Version(transformers.__version__) >= Version("4.56.0") else "torch_dtype"
+    kw = {key: torch_dtype}
+    if importlib.util.find_spec("accelerate") is not None:
+        kw["low_cpu_mem_usage"] = True
+    return kw
+
+
 def load_causal_lm(name, dtype="float16", device=None):
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -39,15 +57,14 @@ def load_causal_lm(name, dtype="float16", device=None):
     if tok.pad_token is None:
         tok.pad_token = tok.eos_token
     tok.padding_side = "right"
-    model = AutoModelForCausalLM.from_pretrained(name, torch_dtype=td).to(device).eval()
+    model = AutoModelForCausalLM.from_pretrained(name, **dtype_kwarg(td)).to(device).eval()
     return model, tok, device
 
 
-def free(*objs):
+def release():
+    """Return freed GPU memory to the allocator. Callers must `del` their own references first."""
     import gc
     import torch
-    for o in objs:
-        del o
     gc.collect()
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
@@ -58,7 +75,7 @@ def batch_stats(model, tok, texts, max_tokens, device, buckets=(10, 100, 1000)):
     import torch.nn.functional as F
     enc = tok(list(texts), return_tensors="pt", padding=True, truncation=True, max_length=max_tokens).to(device)
     with torch.inference_mode():
-        logits = model(**enc).logits[:, :-1].float()
+        logits = model(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"]).logits[:, :-1].float()
     labels = enc["input_ids"][:, 1:]
     mask = enc["attention_mask"][:, 1:].float()
     vocab = logits.shape[-1]
@@ -94,6 +111,11 @@ def batch_stats(model, tok, texts, max_tokens, device, buckets=(10, 100, 1000)):
     return res
 
 
+def _append(cached, new):
+    parts = [f for f in [cached, *new] if len(f)]          # skip empty frames (pandas dtype rules)
+    return pd.concat(parts, ignore_index=True) if parts else cached
+
+
 def compute_token_stats(frame, model_name, cache_root, max_tokens=512, batch_size=4, dtype="float16",
                         buckets=(10, 100, 1000), loaded=None, flush_every=50):
     """
@@ -116,14 +138,15 @@ def compute_token_stats(frame, model_name, cache_root, max_tokens=512, batch_siz
             new.append(pd.DataFrame({"row_id": chunk["row_id"].values, **st}))
             batches += 1
             if batches % flush_every == 0:
-                cached = pd.concat([cached, *new], ignore_index=True)
+                cached = _append(cached, new)
                 cached.to_parquet(cache_p, index=False)
                 new = []
                 print(f"[token_stats] {model_name}: {len(cached)} cached")
-        cached = pd.concat([cached, *new], ignore_index=True)
+        cached = _append(cached, new)
         cached.to_parquet(cache_p, index=False)
         if loaded is None:
-            free(model)
+            del model
+            release()
     stats = frame[["row_id"]].merge(cached.drop_duplicates("row_id"), on="row_id", how="left")
     if stats[STAT_COLS].isna().all(axis=1).any():
         raise RuntimeError("token stats missing for some rows after computation")

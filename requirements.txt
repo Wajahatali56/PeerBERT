@@ -1,13 +1,13 @@
-# Do NOT reinstall torch on Kaggle/Colab; it is preinstalled.
-transformers>=4.48.0
+# torch is preinstalled on Colab/Kaggle: do not reinstall it.
+transformers>=4.48.0      # ModernBERT support starts at 4.48
 huggingface_hub>=0.22
 pandas>=2.0
 pyarrow>=14.0
 numpy>=1.24
 scipy>=1.10
-lightgbm>=4.0
 scikit-learn>=1.3
 matplotlib>=3.7
 pyyaml>=6.0
-tqdm>=4.65
-captum>=0.7.0   # needed from Step 9 (Integrated Gradients)
+packaging>=23.0
+accelerate>=0.26          # low-memory loading of large baseline LMs
+captum>=0.7.0             # Integrated Gradients (scripts/10_explain.py)

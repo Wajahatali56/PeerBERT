@@ -64,6 +64,14 @@ def test_prefixed_subfields_excluded_not_fatal(cfg, hub):
     assert stats["files_with_prefixed_fields"]
 
 
+def test_any_flattened_copy_of_an_allowed_field_is_excluded(cfg, hub):
+    extra = lambda label: {"summary.part_1": "long flattened summary text " * 20}  # noqa: E731
+    hub.add("test", "claude", "ICLR", 2024, intel_frame("ICLR", 2024, "claude", schema="ssq", extra=extra))
+    df, stats, _ = _load(cfg, hub, "test")
+    assert "long flattened" not in df.iloc[0]["text"]
+    assert "summary.part_1" in stats["file_stats"][0]["prefixed_excluded"]
+
+
 def test_schema_guard_collects_all_problems_then_raises(cfg, hub):
     no_text = intel_frame("ICLR", 2022, "claude").drop(columns=["review"])
     unknown = intel_frame("ICLR", 2021, "claude", extra=lambda l: {"mystery_essay": "y" * 400})

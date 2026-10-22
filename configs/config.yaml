@@ -36,7 +36,8 @@ data:
       - review
       - summary_of_the_paper
       - summary
-      - strength_and_weaknesses
+      - strength_and_weaknesses          # ICLR 2023 form
+      - strengths_and_weaknesses         # NeurIPS 2022 form
       - strengths
       - weaknesses
       - main_review
@@ -52,6 +53,7 @@ data:
       - PaperId
       - review-id
       - conference
+      - title                           # review title in older ICLR forms (short, not review body)
       - rating
       - confidence
       - correctness
@@ -67,8 +69,8 @@ data:
       - ethics_review_area
       - time_spent_reviewing
       - code_of_conduct               # leaks the label (length differs by label)
-    # Flattened sub-fields (e.g. strengths.strength_1) exist only in some AI files:
-    # excluded from text, reported in the load stats.
+    # Flattened sub-fields (e.g. strengths.strength_1) exist only in some AI files: excluded
+    # from text and reported. Any "<allow-listed field>.<name>" column is treated the same way.
     text_field_never_prefixes: [strengths., weaknesses., questions., limitations.]
     # Schema guard: an unlisted string column with mean length above this is an error.
     unknown_narrative_min_mean_chars: 150

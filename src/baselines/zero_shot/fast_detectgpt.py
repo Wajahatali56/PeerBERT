@@ -28,8 +28,8 @@ def score_two_models(texts, ref, score_m, tok, device, max_tokens=512, batch_siz
         enc = tok(list(texts[i:i + batch_size]), return_tensors="pt", padding=True, truncation=True,
                   max_length=max_tokens).to(device)
         with torch.inference_mode():
-            lr = ref(**enc).logits[:, :-1].float()
-            ls = score_m(**enc).logits[:, :-1].float()
+            lr = ref(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"]).logits[:, :-1].float()
+            ls = score_m(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"]).logits[:, :-1].float()
         v = min(lr.shape[-1], ls.shape[-1])
         lr, ls = lr[..., :v], ls[..., :v]
         labels = enc["input_ids"][:, 1:].clamp(max=v - 1)

@@ -89,7 +89,9 @@ def classify_columns(df, icfg):
     for c in df.columns:
         if c in allow or c in never:
             continue
-        if prefixes and c.startswith(prefixes):
+        # Flattened copies of an allow-listed field (e.g. strengths.strength_1) only exist in some
+        # generators' files; they are excluded from the text and reported.
+        if (prefixes and c.startswith(prefixes)) or ("." in c and c.split(".", 1)[0] in allow):
             prefixed.append(c)
             continue
         mean_len = df[c].astype(str).str.len().mean() if len(df) else 0.0

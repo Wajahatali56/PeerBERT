@@ -64,7 +64,7 @@ def regenerate(model, tok, prefixes, device, k=5, max_prompt_tokens=384, max_new
               max_length=max_prompt_tokens).to(device)
     torch.manual_seed(seed)
     with torch.inference_mode():
-        out = model.generate(**enc, do_sample=True, temperature=temperature, top_p=1.0, top_k=0,
+        out = model.generate(input_ids=enc["input_ids"], attention_mask=enc["attention_mask"], do_sample=True, temperature=temperature, top_p=1.0, top_k=0,
                              max_new_tokens=max_new_tokens, num_return_sequences=k,
                              pad_token_id=tok.pad_token_id)
     gen = out[:, enc["input_ids"].shape[1]:]

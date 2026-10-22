@@ -51,7 +51,7 @@ def main():
 
     from src.baselines import registry
     from src.baselines.statistical import detectllm_lrr, gltr, logrank, mfd
-    from src.baselines.statistical.token_stats import compute_token_stats, free, load_causal_lm
+    from src.baselines.statistical.token_stats import compute_token_stats, load_causal_lm, release
     from src.baselines.zero_shot import fast_detectgpt
     from src.data.common import (
         cache_dir, dataset_dir_name, load_config, load_json, manifest_dir, resolve_path, save_json, set_seed,
@@ -103,7 +103,8 @@ def main():
                 continue
             stats[split] = compute_token_stats(frame, ts["model"], bcache, com["max_tokens"], com["batch_size"],
                                                com["dtype"], tuple(bcfg["gltr"]["rank_buckets"]), loaded=loaded)
-        free(loaded[0])
+        del loaded
+        release()
 
     # ------------------------------------------------ per-detector scores
     def scores_for(name):
@@ -137,7 +138,8 @@ def main():
             obs, perf, tok, dev = binoculars.load_pair(o, p, com["dtype"])
             out = {s: binoculars.score(sets[s]["text"].tolist(), obs, perf, tok, dev, com["max_tokens"],
                                        bc.get("batch_size", 2)) for s in eval_splits}
-            free(obs, perf)
+            del obs, perf
+            release()
             return out, {"observer": o, "performer": p, "paper_pair": bool(bc["use_paper_pair"])}
         if name == "radar":
             from src.baselines.neural_detectors import radar
@@ -145,7 +147,8 @@ def main():
             model, tok, dev = radar.load(rc["model"])
             probs = {s: radar.probabilities(model, tok, sets[s]["text"].tolist(), dev, rc["max_length"],
                                             rc.get("batch_size", 16)) for s in eval_splits}
-            free(model)
+            del model
+            release()
             idx, decision = radar.orient(probs["val"], sets["val"]["label"].values)
             return {s: p[:, idx] for s, p in probs.items()}, {"orientation": decision, "model": rc["model"]}
         if name == "dnagpt":
@@ -155,7 +158,8 @@ def main():
             out, w = {}, {}
             for s in eval_splits:
                 out[s], w[s] = dnagpt.run(sets[s], model, tok, dev, dc, bcache / f"dnagpt_{ds}_{s}.jsonl", seed)
-            free(model)
+            del model
+            release()
             info = {"regenerator": dc["regenerator"], "k": dc["k"], "gamma": dc["gamma"]}
             if dc.get("wscore"):
                 info["wscore_auroc_val"] = binary_metrics(sets["val"]["label"], np.nan_to_num(w["val"]))["roc_auc"]
