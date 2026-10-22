@@ -8,3 +8,7 @@ venv/
 *.safetensors
 *.pt
 .DS_Store
+# generated data (large; rebuilt by scripts/02_prepare_splits.py)
+outputs/cache/
+outputs/manifests/**/*.parquet
+.pytest_cache/
