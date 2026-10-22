@@ -3,9 +3,9 @@ RADAR (Hu et al., NeurIPS 2023), checkpoint TrustSafeAI/RADAR-Vicuna-7B: a RoBER
 sequence classifier released by the authors. Pretrained detector: no training on our data.
 
 Label order: the model card does not document it and the official demo could not be
-fetched in this session -> UNVERIFIED. `ai_index` (config) is the assumed index of the
-AI-generated class; its orientation is checked on the VALIDATION sample only: if
-AUROC(val) < 0.5 the other index is used, and the decision is recorded and disclosed.
+fetched -> UNVERIFIED, so NO index is assumed. The output column whose probability ranks
+validation AI reviews above human reviews (higher validation AUROC) is used; this is
+decided on the VALIDATION sample only, recorded, and disclosed.
 """
 
 import numpy as np
@@ -36,13 +36,12 @@ def probabilities(model, tok, texts, device, max_length=512, batch_size=16):
     return out
 
 
-def orient(val_proba, y_val, ai_index=0):
-    """Pick the AI column on validation only. Returns (index, decision dict)."""
+def orient(val_proba, y_val):
+    """Choose the AI column on validation only. Returns (index, decision dict)."""
     from sklearn.metrics import roc_auc_score
     if val_proba.shape[1] != 2:
         raise ValueError(f"RADAR expected 2 outputs, got {val_proba.shape[1]}")
-    auc = roc_auc_score(y_val, val_proba[:, ai_index])
-    idx = ai_index if auc >= 0.5 else 1 - ai_index
-    return idx, {"configured_ai_index": ai_index, "val_auroc_configured_index": float(auc),
-                 "used_ai_index": idx, "flipped_on_validation": idx != ai_index,
-                 "status": "UNVERIFIED label order; orientation decided on validation only"}
+    aucs = [float(roc_auc_score(y_val, val_proba[:, i])) for i in (0, 1)]
+    idx = int(np.argmax(aucs))
+    return idx, {"val_auroc_per_output": aucs, "used_ai_index": idx, "n_val": int(len(y_val)),
+                 "status": "label order UNVERIFIED; AI column chosen on validation only"}

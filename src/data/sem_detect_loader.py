@@ -9,8 +9,8 @@ Sem-Detect/ML_Conferences-Peer-Reviews loader (3-class: human=0, ai=1, rewrite=2
 - og_review_id is metadata only (not a pairing key), never used for grouping.
 - Only invalid rows are dropped (missing class/split/paper key, empty text), each
   logged. The test split is NOT deduplicated; duplicate texts are only flagged.
-- Stated dataset facts (row/class/split counts) are checked and reported as
-  warnings when they do not match.
+- Nothing about the dataset is hard-coded: row, class and split counts are read from
+  the real files and saved in the load stats.
 """
 
 import pandas as pd
@@ -41,23 +41,11 @@ def _norm(series):
     return series.map(clean_text).str.lower()
 
 
-def check_expected(raw, scfg):
-    """Compare raw counts with the stated facts. Returns a list of warnings."""
-    exp = scfg.get("expected") or {}
-    warnings = []
-    if "rows" in exp and len(raw) != exp["rows"]:
-        warnings.append(f"rows: expected {exp['rows']}, observed {len(raw)}")
-    for col, key in (("class", "class_counts"), ("split", "split_counts")):
-        if key not in exp:
-            continue
-        obs = _norm(raw[col]).value_counts().to_dict()
-        for k, v in exp[key].items():
-            if obs.get(k, 0) != v:
-                warnings.append(f"{col}={k}: expected {v}, observed {obs.get(k, 0)}")
-        extra = sorted(set(obs) - set(exp[key]))
-        if extra:
-            warnings.append(f"{col}: unexpected values {extra}")
-    return warnings
+def observed_counts(raw):
+    """Counts read from the real files (reported, never compared with assumed numbers)."""
+    return {"rows": len(raw), "columns": list(raw.columns),
+            "class_counts": _norm(raw["class"]).value_counts().to_dict(),
+            "split_counts": _norm(raw["split"]).value_counts().to_dict()}
 
 
 def build_frame(raw, scfg):
@@ -66,7 +54,10 @@ def build_frame(raw, scfg):
     if missing:
         raise ValueError(f"Sem-Detect: missing required columns {missing}; got {list(raw.columns)}")
     label_map = {str(k).lower(): int(v) for k, v in scfg["label_map"].items()}
-    raw = raw.reset_index(drop=True)
+    raw = raw.reset_index(drop=True).copy()
+    optional_missing = [c for c in scfg.get("optional_columns", []) if c not in raw.columns]
+    for c in optional_missing:
+        raw[c] = ""          # absent in the real files: kept empty and reported, never invented
 
     cls = _norm(raw["class"])
     split = _norm(raw["split"])
@@ -76,7 +67,7 @@ def build_frame(raw, scfg):
         raise ValueError(f"Sem-Detect: unknown class values {unknown_cls} / split values {unknown_split}")
 
     review_id = raw["review_id"].map(clean_text)
-    ids_unique = review_id.ne("").all() and not review_id.duplicated().any()
+    ids_unique = bool(review_id.ne("").all() and not review_id.duplicated().any())
     row_id = ("sd:" + review_id) if ids_unique else ("sd:row" + raw.index.astype(str))
 
     conference = raw["conference"].map(clean_text)
@@ -125,7 +116,7 @@ def build_frame(raw, scfg):
     dup_within = {s: int(g["text_hash"].duplicated(keep=False).sum()) for s, g in df.groupby("partition")}
     tr, te = df[df["partition"] == "train"], df[df["partition"] == "test"]
     stats = {
-        "rows_raw": len(raw), "rows": len(df),
+        "rows_raw": len(raw), "rows": len(df), "optional_columns_missing": optional_missing,
         "row_id_scheme": "review_id" if ids_unique else "row_index (review_id not unique)",
         "dropped": {k: int(v.sum()) for k, v in invalid.items()},
         "class_by_split": {s: g["label_name"].value_counts().to_dict() for s, g in df.groupby("partition")},
@@ -157,11 +148,13 @@ def load_semdetect(cfg, frame_loader=None, use_cache=True):
 
     loader = frame_loader or hf_frame_loader
     raw, files = loader(scfg["repo_id"], scfg.get("config_name", "reviews"))
-    warnings = check_expected(raw, scfg)
+    observed = observed_counts(raw)
     df, stats, log = build_frame(raw, scfg)
-    stats = {"config_hash": key, "files": files, "expected_fact_warnings": warnings, **stats}
-    for w in warnings:
-        print(f"[semdetect] WARN stated fact mismatch: {w}")
+    stats = {"config_hash": key, "files": files, "observed_raw": observed, **stats}
+    print(f"[semdetect] observed in the real files: rows={observed['rows']} "
+          f"classes={observed['class_counts']} splits={observed['split_counts']}")
+    if stats["optional_columns_missing"]:
+        print(f"[semdetect] optional columns not present: {stats['optional_columns_missing']}")
     print(f"[semdetect] {len(df)} rows kept of {len(raw)}; class_by_split={stats['class_by_split']}")
 
     cdir.mkdir(parents=True, exist_ok=True)

@@ -146,7 +146,7 @@ def main():
             probs = {s: radar.probabilities(model, tok, sets[s]["text"].tolist(), dev, rc["max_length"],
                                             rc.get("batch_size", 16)) for s in eval_splits}
             free(model)
-            idx, decision = radar.orient(probs["val"], sets["val"]["label"].values, rc["ai_index"])
+            idx, decision = radar.orient(probs["val"], sets["val"]["label"].values)
             return {s: p[:, idx] for s, p in probs.items()}, {"orientation": decision, "model": rc["model"]}
         if name == "dnagpt":
             from src.baselines.zero_shot import dnagpt

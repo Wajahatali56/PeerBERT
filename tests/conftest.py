@@ -81,9 +81,7 @@ def semdetect_raw(n_train_papers=8, n_test_papers=4):
 @pytest.fixture
 def cfg(tmp_path, monkeypatch):
     monkeypatch.setenv("PRAD_WORK_DIR", str(tmp_path / "work"))
-    c = load_config()
-    c["data"]["semdetect"]["expected"] = {}
-    return c
+    return load_config()
 
 
 @pytest.fixture

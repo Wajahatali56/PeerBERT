@@ -8,7 +8,7 @@ import pytest
 from conftest import ROOT, intel_frame, semdetect_raw
 from src.data.intellabs_loader import SchemaError, build_text, load_subset
 from src.data.leakage_audit import assert_audit_passed, run_audit
-from src.data.sem_detect_loader import build_frame, check_expected
+from src.data.sem_detect_loader import build_frame, observed_counts
 from src.data.splits import cap_by_papers, check_invariants, paper_overlaps, split_by_paper
 
 
@@ -134,10 +134,20 @@ def test_semdetect_unknown_class_raises(cfg):
         build_frame(raw, cfg["data"]["semdetect"])
 
 
-def test_semdetect_expected_facts_reported(cfg):
-    scfg = dict(cfg["data"]["semdetect"], expected={"rows": 22165, "class_counts": {"human": 3065}})
-    w = check_expected(semdetect_raw(), scfg)
-    assert any("rows" in x for x in w) and any("class=human" in x for x in w)
+def test_semdetect_counts_are_observed_not_assumed(cfg):
+    raw = semdetect_raw()
+    obs = observed_counts(raw)
+    assert obs["rows"] == len(raw) and obs["class_counts"] == {"human": 12, "ai": 12, "rewrite": 12}
+    assert "expected" not in cfg["data"]["semdetect"]
+
+
+def test_semdetect_optional_columns_reported_not_invented(cfg):
+    raw = semdetect_raw().drop(columns=["submission_id", "og_review_id"])
+    df, stats, _ = build_frame(raw, cfg["data"]["semdetect"])
+    assert stats["optional_columns_missing"] == ["submission_id", "og_review_id"]
+    assert (df["submission_id"] == "").all()
+    with pytest.raises(ValueError, match="missing required columns"):
+        build_frame(raw.drop(columns=["clean_review"]), cfg["data"]["semdetect"])
 
 
 # ---------------------------------------------------------------- splits/caps

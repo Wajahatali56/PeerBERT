@@ -191,6 +191,8 @@ def main():
             "Ablation": res_root / "ablation.json",
             "Cross-dataset (into this dataset)": next(iter(sorted(res_root.glob("cross_from_*/metrics.json"))),
                                                       res_root / "cross_from_x" / "metrics.json"),
+            "Explainability (XAI)": next(iter(sorted((res_root / "xai" / args.tag).glob("seed*/summary.json"))),
+                                         res_root / "xai" / "missing" / "summary.json"),
         }
         md += [f"- {k}: {status_of(v)}" for k, v in arts.items()] + [""]
 
@@ -239,6 +241,20 @@ def main():
                    f"Macro-F1 @ source-val threshold: {m.get('macro_f1', {}).get('mean')} "
                    f"+/- {m.get('macro_f1', {}).get('std')}; ROC-AUC {m.get('roc_auc', {}).get('mean')}", ""]
             md += [f"- {n}" for n in c["mismatch_notes"]] + [""]
+        xs = arts["Explainability (XAI)"]
+        if xs.exists():
+            x = load_json(xs)
+            md += [f"### Explainability (seed {x['seed']}, {x['n_examples']} {x['split']} reviews)", "",
+                   "| method | k | comprehensiveness (higher better) | sufficiency (lower better) |",
+                   "|---|---|---|---|"]
+            for meth, byk in x["faithfulness"].items():
+                for k, v in byk.items():
+                    c, su = v["comprehensiveness"], v["sufficiency"]
+                    md.append(f"| {meth} | {k} | {c['mean']:.4f} | {su['mean']:.4f} |" if c and su
+                              else f"| {meth} | {k} | -- | -- |")
+            sp = x["spearman_abs_ig_vs_attention"]
+            md += ["", "Spearman(|IG|, attention): " + ", ".join(
+                f"{k} {v['mean']:.3f}" for k, v in sp.items() if v), f"Top tokens: `{xs.parent / 'top_tokens.csv'}`", ""]
         index[ds] = {k: str(v) for k, v in arts.items()}
     (out / "report.md").write_text("\n".join(md), encoding="utf-8")
     save_json(index, out / "artefacts.json")
