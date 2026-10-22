@@ -1,0 +1,47 @@
+# PeerBERT (ModernBERT-base) training configuration. Used by scripts 03, 04, 05, 07, 08.
+model:
+  name: answerdotai/ModernBERT-base
+  max_length: 1024            # ModernBERT supports up to 8192; truncation rate is reported
+  truncation: head            # head | head_tail (keep start and end of long reviews)
+  head_tokens: 256            # head_tail only: tokens kept from the start
+  # ModernBERT's default dropouts are 0.0 (verified at runtime from the loaded config).
+  # dropout_on=true sets every *_dropout field that exists in the config to `dropout`.
+  dropout_on: true
+  dropout: 0.1
+
+training:
+  seeds: [42, 43, 44]         # final configuration: mean +/- std over these seeds
+  epochs: 4
+  lr: 3.0e-5
+  weight_decay: 0.01
+  warmup_ratio: 0.06
+  batch_size: 8               # per step; effective batch = batch_size * grad_accum
+  grad_accum: 4
+  eval_batch_size: 32
+  max_grad_norm: 1.0
+  early_stopping_patience: 2  # epochs without val Macro-F1 improvement
+  max_bad_steps: 20           # consecutive non-finite losses before aborting
+  num_workers: 2
+  amp: auto                   # auto: bf16 if supported, else fp16 + GradScaler; "off" for fp32
+  gpu_id: 0                   # single GPU; set before torch is imported
+
+loss:
+  type: weighted_ce           # ce | weighted_ce | label_smoothing | focal
+  label_smoothing: 0.05
+  focal_gamma: 2.0
+  rdrop_alpha: 1.0            # 0 disables R-Drop (L_cons)
+
+threshold:
+  objective: macro_f1         # val-calibrated threshold objective: macro_f1 | youden
+
+# Ablations (scripts/07_run_ablation.py), selected on VALIDATION Macro-F1, one seed.
+ablation:
+  seed: 42
+  variants:
+    - {name: ce_unweighted,     loss: {type: ce,              rdrop_alpha: 0.0}}
+    - {name: ce_weighted,       loss: {type: weighted_ce,     rdrop_alpha: 0.0}}
+    - {name: label_smoothing,   loss: {type: label_smoothing, rdrop_alpha: 0.0}}
+    - {name: focal_weighted,    loss: {type: focal,           rdrop_alpha: 0.0}}
+    - {name: rdrop_0.5,         loss: {type: weighted_ce,     rdrop_alpha: 0.5}}
+    - {name: rdrop_1.0,         loss: {type: weighted_ce,     rdrop_alpha: 1.0}}
+    - {name: dropout_off,       loss: {type: weighted_ce,     rdrop_alpha: 0.0}, model: {dropout_on: false}}

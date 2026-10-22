@@ -9,6 +9,12 @@ paths:
   manifest_dir: outputs/manifests
   model_dir: outputs/models
   results_dir: outputs/results
+  cache_dir: outputs/cache            # restart-safe parquet cache of loaded subsets
+
+# Config keys use `semdetect`; output folders use `sem_detect`.
+dataset_dirs:
+  intellabs: intellabs
+  semdetect: sem_detect
 
 data:
   intellabs:
@@ -21,14 +27,73 @@ data:
     ai_label_value: 1
     val_fraction_papers: 0.15
     train_max_rows: 24000              # null = use all; compute-driven cap
+    val_max_rows: null                 # null = full validation split
     model_eval_max_rows: 30000         # null = full official test
     baseline_eval_max_rows: 600
+    extended_max_rows: 30000           # null = full extended (after overlap exclusion)
+    # Narrative review fields, joined with a blank line in THIS order.
+    text_fields_allow:
+      - review
+      - summary_of_the_paper
+      - summary
+      - strength_and_weaknesses
+      - strengths
+      - weaknesses
+      - main_review
+      - clarity_quality_novelty_and_reproducibility
+      - questions
+      - limitations
+      - limitations_and_societal_impact
+      - summary_of_the_review
+    # Never used as text (scores, flags, metadata, label-leaking fields).
+    text_fields_never:
+      - label
+      - custom_id
+      - PaperId
+      - review-id
+      - conference
+      - rating
+      - confidence
+      - correctness
+      - technical_novelty_and_significance
+      - empirical_novelty_and_significance
+      - recommendation
+      - soundness
+      - presentation
+      - contribution
+      - flag_for_ethics_review
+      - needs_ethics_review
+      - ethics_flag
+      - ethics_review_area
+      - time_spent_reviewing
+      - code_of_conduct               # leaks the label (length differs by label)
+    # Flattened sub-fields (e.g. strengths.strength_1) exist only in some AI files:
+    # excluded from text, reported in the load stats.
+    text_field_never_prefixes: [strengths., weaknesses., questions., limitations.]
+    # Schema guard: an unlisted string column with mean length above this is an error.
+    unknown_narrative_min_mean_chars: 150
   semdetect:
     repo_id: Sem-Detect/ML_Conferences-Peer-Reviews
     config_name: reviews
     label_map: {human: 0, ai: 1, rewrite: 2}
+    text_field: clean_review
+    # Columns the loader cannot work without (it raises if any is missing in the real files).
+    required_columns: [paper_id, conference, year, class, clean_review, split]
+    # Used when present: review_id (row ids), submission_id (overlap cross-check),
+    # og_review_id (metadata only). Missing ones are reported, never invented.
+    optional_columns: [review_id, submission_id, og_review_id]
     val_fraction_papers: 0.10
+    train_max_rows: null
+    val_max_rows: null
+    model_eval_max_rows: null
     baseline_eval_max_rows: 600
+
+audit:
+  # Fraction of eval rows whose exact text also occurs in train: above -> FAIL, else WARN.
+  exact_dup_cross_fail_fraction: 0.001
+  near_dup_sample_size: 2000          # per partition, TF-IDF cosine (information only)
+  near_dup_cosine: 0.90
+  length_auroc_warn: 0.75             # max(AUROC, 1-AUROC) of length-only detector
 
 inspection:
   sample_conf_years: [ICLR2021, ICLR2022, ICLR2023, ICLR2024, NeurIPS2021, NeurIPS2024]
