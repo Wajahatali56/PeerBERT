@@ -1,0 +1,61 @@
+# Baselines (scripts/06_run_baselines.py). All methods are compared on the manifests'
+# test_baseline subset (nested inside the model test set). Sem-Detect: human/ai rows only
+# for metrics; rewrite rows give a descriptive "fraction flagged as AI" diagnostic.
+# Thresholds are calibrated on a whole-paper VALIDATION sample only.
+
+run: [logrank, gltr, detectllm_lrr, mfd, fast_detectgpt, binoculars, radar, dnagpt]
+
+common:
+  dtype: float16              # LM inference dtype on GPU (float32 on CPU)
+  max_tokens: 512             # tokens per review scored by every LM-based detector
+  batch_size: 4
+  val_rows: 600               # whole-paper validation sample for threshold calibration
+  train_rows: 2000            # whole-paper train sample used to FIT gltr/mfd (disclosed)
+  threshold_objective: macro_f1
+  gpu_id: 0
+
+# One shared forward pass of this LM gives LogRank, GLTR, DetectLLM-LRR, MFD features and
+# (same reference = scoring model) the analytic Fast-DetectGPT criterion.
+token_stats:
+  model: EleutherAI/gpt-neo-2.7B   # a scoring model used in the Fast-DetectGPT repo (model.py)
+
+gltr:
+  rank_buckets: [10, 100, 1000]    # top-10 / 10-100 / 100-1000 / >1000 (1-indexed ranks)
+
+mfd:
+  head: logreg                     # logreg ("MFD") | mlp ("MFD-M", 4-16-16-16-1)
+  mlp_hidden: [16, 16, 16]
+
+fast_detectgpt:
+  reference_model: same            # "same" = token_stats.model (white-box setting)
+  scoring_model: same
+
+binoculars:
+  # Paper/official pair: tiiuae/falcon-7b (observer) + tiiuae/falcon-7b-instruct (performer).
+  # Two 7B models do not fit a 16 GB T4 in fp16, so a smaller same-tokenizer base/instruct
+  # pair is used by default (DEVIATION, disclosed). SmolLM2 is not one of the IntelLabs
+  # generator families (claude, gemini, gpt-4o, llama, qwen).
+  use_paper_pair: false
+  paper_observer: tiiuae/falcon-7b
+  paper_performer: tiiuae/falcon-7b-instruct
+  observer: HuggingFaceTB/SmolLM2-1.7B
+  performer: HuggingFaceTB/SmolLM2-1.7B-Instruct
+  batch_size: 2
+
+radar:
+  model: TrustSafeAI/RADAR-Vicuna-7B   # RoBERTa-based detector checkpoint
+  max_length: 512
+  ai_index: 0                 # UNVERIFIED in this session; orientation re-checked on validation
+  batch_size: 16
+
+dnagpt:
+  regenerator: EleutherAI/gpt-neo-2.7B  # LOCAL LM (deviation: paper regenerates with the source LLM)
+  gamma: 0.5                  # truncation ratio (characters)
+  k: 5                        # regenerations per review (official demo uses 30; compute-capped)
+  max_prompt_tokens: 384
+  max_new_tokens: 200
+  temperature: 0.7
+  ngram_min: 4
+  ngram_max: 25
+  wscore: false               # optional probability-based score
+  batch_size: 2
