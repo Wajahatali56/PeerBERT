@@ -215,9 +215,35 @@ def test_radar_orientation_on_validation():
     from src.baselines.neural_detectors import radar
     y = np.array([0, 0, 1, 1])
     p = np.array([[.2, .8], [.3, .7], [.9, .1], [.8, .2]])     # column 0 tracks AI
-    assert radar.orient(p, y, ai_index=0)[0] == 0
-    idx, d = radar.orient(p, y, ai_index=1)
-    assert idx == 0 and d["flipped_on_validation"]
+    idx, d = radar.orient(p, y)
+    assert idx == 0 and d["val_auroc_per_output"] == [1.0, 0.0]
+    assert radar.orient(p[:, ::-1], y)[0] == 1
+
+
+# ---------------------------------------------------------------- XAI
+def test_xai_attention_ig_faithfulness(tiny):
+    from src.models.modernbert_classifier import load_trained
+    from src.xai.attention import attention_scores, spearman
+    from src.xai.faithfulness import faithfulness
+    from src.xai.integrated_gradients import ig_attributions, special_token_mask
+    model, tok = load_trained(tiny["modernbert"], eager_attention=True)
+    model.float().eval()
+    dev = torch.device("cpu")
+    ids = tok("the paper proposes a novel method zzunknownzz strong results")["input_ids"]
+    special = special_token_mask(tok, ids)
+    assert special[0] and special[-1] and not any(special[1:-1])
+    assert tok.unk_token_id in ids[1:-1]                    # [UNK] content is still attributed
+    att = attention_scores(model, ids, dev)
+    assert len(att["last_layer"]) == len(ids) and att["pooling"] == model.hf.config.classifier_pooling
+    assert att["rollout"].sum() == pytest.approx(1.0, abs=1e-4) or att["pooling"] == "mean"
+    ig, delta, p, p0 = ig_attributions(model, ids, special, 1, dev, tok.pad_token_id, n_steps=300,
+                                       internal_batch_size=50)
+    assert len(ig) == len(ids)
+    assert ig.sum() == pytest.approx(p - p0, abs=max(5e-3, 2 * delta))      # completeness
+    f = faithfulness(model, ids, special, {"ig": ig, "att": att["rollout"]}, 1, dev, (0.2,))
+    assert set(f) == {"p_full", "ig", "att", "random"}
+    assert set(f["ig"]["0.2"]) == {"comprehensiveness", "sufficiency"}
+    assert spearman([1, 2, 3, 4], [1, 2, 3, 5]) == pytest.approx(1.0)
 
 
 # ---------------------------------------------------------------- end to end (toy manifests)
@@ -289,6 +315,9 @@ def test_pipeline_scripts_end_to_end(tiny, tmp_path):
               "ce_unweighted", "focal_weighted")
     assert "ce_unweighted" in out
     run(S / "09_build_report.py", "--n-boot", "20")
+    run(S / "10_explain.py", "--dataset", "intellabs", "--train-config", tc_p, "--n-per-group", "2", "--n-steps", "8")
+    run(S / "10_explain.py", "--dataset", "semdetect", "--train-config", tc_p, "--n-per-group", "1", "--n-steps", "8",
+        "--min-token-count", "1")
 
     res = work / "outputs" / "results"
     t = pd.read_csv(res / "intellabs" / "comparison_table.csv")
@@ -304,3 +333,12 @@ def test_pipeline_scripts_end_to_end(tiny, tmp_path):
     assert "Leakage audit: WARN" in report
     cross = json.loads((res / "sem_detect" / "cross_from_intellabs" / "metrics.json").read_text())
     assert cross["n_target"] == 12 and cross["mismatch_notes"]
+    for dd in ("intellabs", "sem_detect"):
+        xs = next((res / dd / "xai" / "final").glob("seed*/summary.json"))
+        x = json.loads(xs.read_text())
+        assert x["n_examples"] > 0 and "random" in x["faithfulness"]
+        assert (xs.parent / "examples.html").exists() and (xs.parent / "top_tokens.csv").exists()
+        lines = (xs.parent / "explanations.jsonl").read_text().splitlines()
+        assert len(lines) == x["n_examples"]
+    run(S / "09_build_report.py", "--n-boot", "20")
+    assert "### Explainability" in (res / "report" / "report.md").read_text()

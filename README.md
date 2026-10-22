@@ -8,7 +8,12 @@ Transformer Models"**. PeerBERT is `answerdotai/ModernBERT-base` fine-tuned sepa
 | [IntelLabs/AI-Peer-Review-Detection-Benchmark](https://huggingface.co/datasets/IntelLabs/AI-Peer-Review-Detection-Benchmark) | binary: human (0) / AI (1) | CSV files, loaded one by one with `huggingface_hub` |
 | [Sem-Detect/ML_Conferences-Peer-Reviews](https://huggingface.co/datasets/Sem-Detect/ML_Conferences-Peer-Reviews) | 3-class: human (0) / ai (1) / rewrite (2) | config `reviews`, Parquet |
 
-The two datasets are never mixed. Only real data and real labels are used.
+The two datasets are never mixed. Only the real files and their real labels are used:
+- No data is generated, and nothing about the datasets is hard-coded.
+- Columns, labels and counts are read from the files.
+- Missing optional columns are reported, never invented.
+- `tests/` uses small hand-written examples only to check code paths; they are never
+  written to `outputs/`.
 
 ## What has been run
 
@@ -43,7 +48,9 @@ python scripts/06_run_baselines.py --dataset semdetect
 python scripts/07_run_ablation.py --dataset intellabs       # validation-based selection
 python scripts/08_cross_dataset.py --source intellabs       # no retraining
 python scripts/08_cross_dataset.py --source semdetect
-python scripts/09_build_report.py
+python scripts/10_explain.py --dataset intellabs           # XAI (attention + Integrated Gradients)
+python scripts/10_explain.py --dataset semdetect
+python scripts/09_build_report.py                           # run last: collects everything
 ```
 
 Every heavy step is restart-safe: loaded subsets are cached as parquet, training resumes from
@@ -100,7 +107,7 @@ are cached. Train on a single GPU (`--gpu`, sets `CUDA_VISIBLE_DEVICES` before t
 | MFD | trained classifier | 4 LM features + LR ("MFD") or 4-16-16-16-1 MLP ("MFD-M"); preprint, disclosed |
 | Fast-DetectGPT | zero-shot | analytic criterion verified against the official repo; surrogate = token-stats LM |
 | Binoculars | zero-shot | formula verified against the official repo; smaller same-tokenizer pair on 16 GB GPUs (flagged) |
-| RADAR | pretrained detector | `TrustSafeAI/RADAR-Vicuna-7B`; label order UNVERIFIED, so orientation is chosen on validation only |
+| RADAR | pretrained detector | `TrustSafeAI/RADAR-Vicuna-7B`; label order UNVERIFIED, so no index is assumed: the AI output is chosen on validation only |
 | DNA-GPT | zero-shot | paper BScore with a local regenerator LM (deviation, disclosed) |
 
 Thresholds are calibrated on validation only. On Sem-Detect, baselines see human/ai rows only.
@@ -118,8 +125,23 @@ For rewrite rows, only a descriptive "fraction flagged as AI" is reported.
 - **Error analysis**: FP/FN tables and per-class / per-conference-year breakdowns.
 - **Outputs**: `outputs/results/{intellabs,sem_detect}/`, including `comparison_table.{csv,json}`.
 
-## Explainability
+## Explainability (`src/xai`, `scripts/10_explain.py`)
 
-The last stage (attention from an eager-attention copy + Integrated Gradients via Captum) is
-built on request; `src/models/modernbert_classifier.load_trained(..., eager_attention=True)`
-is already available. SHAP/LIME are not used.
+No SHAP or LIME. Reviews are drawn from the real `test_baseline` predictions of one seed:
+- The seed is the one with the median validation Macro-F1.
+- Up to N reviews are taken per (true class, correct/incorrect) group, with a fixed seed.
+
+Each review is explained for the model's predicted class with:
+- **Attention** from an eager-attention copy: last layer, mean over layers, and rollout.
+  The pooling (`cls`/`mean`) is read from the model config.
+- **Integrated Gradients** (Captum) on the token embeddings. The baseline replaces content
+  tokens with pad tokens (special tokens kept). Attributions are signed, and the
+  completeness gap (`delta`) is reported.
+- **Faithfulness** (ERASER): comprehensiveness and sufficiency at 10% and 20%, compared
+  with a random ranking. Spearman agreement between |IG| and attention is also reported.
+
+Outputs:
+- `explanations.jsonl`
+- `summary.json`
+- `top_tokens.csv`: highest mean IG tokens per class
+- `examples.html`: colour-coded reviews

@@ -77,12 +77,11 @@ data:
     config_name: reviews
     label_map: {human: 0, ai: 1, rewrite: 2}
     text_field: clean_review
-    required_columns: [paper_id, submission_id, conference, year, review_id, og_review_id, class, clean_review, split]
-    # Facts stated for this thesis; checked at load time, mismatches are reported as WARN.
-    expected:
-      rows: 22165
-      class_counts: {rewrite: 12332, ai: 6768, human: 3065}
-      split_counts: {train: 17711, test: 4454}
+    # Columns the loader cannot work without (it raises if any is missing in the real files).
+    required_columns: [paper_id, conference, year, class, clean_review, split]
+    # Used when present: review_id (row ids), submission_id (overlap cross-check),
+    # og_review_id (metadata only). Missing ones are reported, never invented.
+    optional_columns: [review_id, submission_id, og_review_id]
     val_fraction_papers: 0.10
     train_max_rows: null
     val_max_rows: null

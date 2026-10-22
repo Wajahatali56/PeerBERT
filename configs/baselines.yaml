@@ -45,7 +45,8 @@ binoculars:
 radar:
   model: TrustSafeAI/RADAR-Vicuna-7B   # RoBERTa-based detector checkpoint
   max_length: 512
-  ai_index: 0                 # UNVERIFIED in this session; orientation re-checked on validation
+  # The released label order could not be verified, so no index is assumed: the output
+  # column that tracks "AI" is chosen on the VALIDATION sample only and recorded.
   batch_size: 16
 
 dnagpt:
