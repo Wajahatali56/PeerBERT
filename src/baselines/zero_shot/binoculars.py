@@ -44,8 +44,14 @@ def load_pair(observer, performer, dtype="float16"):
     if tok_o.pad_token is None:
         tok_o.pad_token = tok_o.eos_token
     tok_o.padding_side = "right"
-    obs = AutoModelForCausalLM.from_pretrained(observer, **dtype_kwarg(td)).to(device).eval()
-    perf = AutoModelForCausalLM.from_pretrained(performer, **dtype_kwarg(td)).to(device).eval()
+    try:
+        obs = AutoModelForCausalLM.from_pretrained(observer, **dtype_kwarg(td)).to(device).eval()
+        perf = AutoModelForCausalLM.from_pretrained(performer, **dtype_kwarg(td)).to(device).eval()
+    except torch.cuda.OutOfMemoryError as e:
+        raise RuntimeError(
+            f"CUDA out of memory while loading the Binoculars pair ({observer}, {performer}). Two 7B models "
+            f"(the paper's Falcon pair) need about 29 GB of GPU memory in fp16; choose a smaller base/instruct "
+            f"pair from the same family in configs/baselines.yaml (binoculars.observer / performer).") from e
     return obs, perf, tok_o, device
 
 

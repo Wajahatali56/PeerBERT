@@ -39,9 +39,11 @@ def parse():
     ap.add_argument("--split", default="test_baseline")
     ap.add_argument("--n-per-group", type=int, default=25)
     ap.add_argument("--n-steps", type=int, default=50, help="Integrated Gradients steps")
-    ap.add_argument("--internal-batch-size", type=int, default=8)
+    ap.add_argument("--internal-batch-size", type=int, default=4, help="IG steps per backward pass (halved on out-of-memory)")
     ap.add_argument("--ks", type=float, nargs="+", default=[0.1, 0.2])
     ap.add_argument("--min-token-count", type=int, default=5, help="for the global top-token table")
+    ap.add_argument("--sanity-n", type=int, default=15,
+                    help="reviews for the weight-randomisation sanity check (0 = skip)")
     ap.add_argument("--gpu", type=int, default=0)
     ap.add_argument("--config", default=None)
     ap.add_argument("--train-config", default=None)
@@ -78,7 +80,8 @@ def main():
     from src.models.trainer import CLASS_NAMES, load_train_config, model_root
     from src.xai.attention import attention_scores, spearman
     from src.xai.faithfulness import faithfulness
-    from src.xai.integrated_gradients import display_tokens, ig_attributions, normalise, special_token_mask
+    from src.xai.integrated_gradients import display_tokens, ig_attributions_safe, normalise, special_token_mask
+    from src.xai.sanity import randomization_check, randomized_copy
     from src.xai.visualize import page
 
     cfg = load_config(args.config)
@@ -123,7 +126,7 @@ def main():
             special = special_token_mask(tok, ids)
             target = int(r.pred)
             attn = attention_scores(model, ids, device)
-            ig, delta, p, p0 = ig_attributions(model, ids, special, target, device, pad_id, args.n_steps,
+            ig, delta, p, p0 = ig_attributions_safe(model, ids, special, target, device, pad_id, args.n_steps,
                                                args.internal_batch_size)
             content = [j for j, s in enumerate(special) if not s]
             faith = faithfulness(model, ids, special, {"integrated_gradients": ig, "attention_last": attn["last_layer"],
@@ -177,8 +180,21 @@ def main():
         top = pd.DataFrame(columns=["explained_class", "token", "mean", "count"])
     top.to_csv(out / "top_tokens.csv", index=False)
 
+    sanity = None
+    if args.sanity_n and exs:
+        rnd = randomized_copy(mroot / f"seed{seed}" / "best", seed=0)
+        rows_s = randomization_check(rnd, exs[:args.sanity_n], device, pad_id, args.n_steps, args.internal_batch_size)
+        del rnd
+        vals = lambda k: [r[k] for r in rows_s if r[k] is not None]  # noqa: E731
+        sanity = {"n": len(rows_s), "per_example": rows_s,
+                  "spearman_abs": {"mean": float(np.mean(vals("spearman_abs"))) if vals("spearman_abs") else None},
+                  "spearman_signed": {"mean": float(np.mean(vals("spearman_signed"))) if vals("spearman_signed") else None},
+                  "reading": "Spearman between trained-model and randomly-initialised-model attributions; "
+                             "values near 0 mean the attributions depend on the learned weights"}
+        print(f"[xai] weight-randomisation check: mean Spearman |IG| = {sanity['spearman_abs']['mean']}")
     summary = {
         "dataset": ds, "tag": args.tag, "seed": seed, "split": args.split, "n_examples": len(exs),
+        "sanity_randomization": sanity,
         "groups": ({f"{k[0]}|{'correct' if k[1] else 'incorrect'}": int(v) for k, v in
                     pd.DataFrame(exs).groupby(["label_name", "correct"]).size().items()} if exs else {}),
         "ig": {"n_steps": args.n_steps, "baseline": "pad tokens (special tokens kept)",

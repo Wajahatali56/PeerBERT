@@ -45,6 +45,23 @@ def ig_attributions(model, input_ids, special_mask, target, device, pad_id, n_st
     return tok_attr, float(delta.abs().item()), p, p0
 
 
+def ig_attributions_safe(model, input_ids, special_mask, target, device, pad_id, n_steps=50, internal_batch_size=4):
+    """
+    ig_attributions with an out-of-memory fallback: the internal batch (number of interpolation steps
+    processed at once) is halved until the backward pass fits. The result does not depend on it.
+    """
+    ibs = max(1, int(internal_batch_size))
+    while True:
+        try:
+            return ig_attributions(model, input_ids, special_mask, target, device, pad_id, n_steps, ibs)
+        except torch.cuda.OutOfMemoryError:
+            torch.cuda.empty_cache()
+            if ibs == 1:
+                raise
+            ibs = max(1, ibs // 2)
+            print(f"[xai] CUDA out of memory in Integrated Gradients; retrying with internal batch size {ibs}")
+
+
 def special_token_mask(tokenizer, input_ids):
     """
     True at the template positions the tokenizer adds (e.g. [CLS] first, [SEP] last), read from
