@@ -27,6 +27,14 @@ artefacts that exist and marks everything else as **NOT RUN**.
 
 ## Running the study
 
+### Simple version: IntelLabs only
+`python notebooks/make_intellabs_notebook.py` builds a notebook for the **IntelLabs dataset alone**
+(label 0 = Human, 1 = AI): `calibration` is split by paper into train and validation, `test` is the
+official test, `extended` is a robustness test that is never trained on. It fine-tunes ModernBERT-base
+(3 seeds), evaluates on `test` and `extended`, and compares with the eight baselines on the same
+reviews (a subset of `test` and a subset of `extended`). It has no explainability and no second
+dataset, and with two GPUs it trains two seeds and runs two groups of baselines side by side.
+
 ### One notebook for everything (Kaggle or Colab)
 `notebooks/PeerBERT_full_experiments.ipynb` is self-contained: it writes the project code into the
 runtime (no clone needed), runs every experiment on the original datasets and models, and shows

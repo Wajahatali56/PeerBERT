@@ -226,6 +226,26 @@ def test_ig_retries_with_smaller_internal_batch_on_oom(monkeypatch):
     assert calls == [8, 4, 2, 1]
 
 
+def test_seed_summary_covers_seeds_trained_by_separate_processes(tiny, tmp_path):
+    from src.data.common import load_config
+    from src.models.trainer import load_train_config, model_root, train_from_manifests
+    os.environ["PRAD_WORK_DIR"] = str(tmp_path / "work")
+    try:
+        cfg = load_config()
+        _toy_manifests(tmp_path / "work", cfg)
+        tcfg = load_train_config(overrides={
+            "model": {"name": tiny["modernbert"], "max_length": 32},
+            "training": {"epochs": 1, "batch_size": 4, "grad_accum": 1, "eval_batch_size": 8, "num_workers": 0},
+            "loss": {"type": "ce", "rdrop_alpha": 0.0}})
+        train_from_manifests("intellabs", cfg, tcfg, [1], "final")           # what GPU 0 would run
+        train_from_manifests("intellabs", cfg, tcfg, [2], "final")           # what GPU 1 would run
+        s = json.loads((model_root(cfg, "intellabs") / "final" / "seed_summary.json").read_text())
+    finally:
+        os.environ.pop("PRAD_WORK_DIR")
+    assert s["seeds"] == [1, 2] and [r["seed"] for r in s["runs"]] == [1, 2]
+    assert s["best_val_macro_f1"]["macro_f1"]["values"] and len(s["best_val_macro_f1"]["macro_f1"]["values"]) == 2
+
+
 def test_rdrop_refused_without_dropout(tiny, tmp_path):
     from src.models.trainer import load_train_config, train_one
     tcfg = load_train_config(overrides={
@@ -360,7 +380,9 @@ def _toy_manifests(work, cfg):
         md = manifest_dir(cfg, ds)
         md.mkdir(parents=True, exist_ok=True)
         names = ["human", "ai", "rewrite"][:k]
-        for split, n_pap, off in (("train", 12, 0), ("val", 6, 100), ("test", 6, 200)):
+        splits = [("train", 12, 0), ("val", 6, 100), ("test", 6, 200)] + (
+            [("extended", 6, 300)] if ds == "intellabs" else [])
+        for split, n_pap, off in splits:
             rows = []
             for p in range(n_pap):
                 for lab in range(k):
@@ -374,10 +396,15 @@ def _toy_manifests(work, cfg):
         test = pd.read_parquet(md / "test.parquet")
         test[test["paper_key"].isin(test["paper_key"].unique()[:4])].to_parquet(md / "test_baseline.parquet",
                                                                                index=False)
+        if ds == "intellabs":
+            ext = pd.read_parquet(md / "extended.parquet")
+            ext[ext["paper_key"].isin(ext["paper_key"].unique()[:4])].to_parquet(md / "extended_baseline.parquet",
+                                                                                 index=False)
         desc = {n: {"rows": len(f), "papers": int(f["paper_key"].nunique()),
                     "label_counts": {str(k): int(v) for k, v in f["label"].value_counts().sort_index().items()}}
                 for n, f in ((n, pd.read_parquet(md / f"{n}.parquet"))
-                             for n in ("train", "val", "test", "test_baseline"))}
+                             for n in ("train", "val", "test", "test_baseline") + (
+                                 ("extended", "extended_baseline") if ds == "intellabs" else ()))}
         save_json({"dataset": ds, "seed": 42, "caps": {"test_baseline": 600}, "audit_status": "WARN",
                    "full_partitions": {n: desc[n] for n in ("train", "val", "test")}, "manifests": desc,
                    "exclusions": {}}, md / "summary.json")
@@ -440,6 +467,11 @@ def test_pipeline_scripts_end_to_end(tiny, tmp_path):
     t = pd.read_csv(res / "intellabs" / "comparison_table.csv")
     assert {"trained classifier", "zero-shot detector"} <= set(t["type"])
     assert {"LogRank", "GLTR", "DetectLLM-LRR", "MFD", "Fast-DetectGPT", "Binoculars", "DNA-GPT"} <= set(t["method"])
+    assert {"test_baseline", "extended_baseline"} <= set(t["split"])                       # baselines scored on extended too
+    assert (res / "intellabs" / "baselines" / "logrank" / "predictions_extended_baseline.csv").exists()
+    ms_i = json.loads((res / "intellabs" / "peerbert" / "final" / "metrics_summary.json").read_text())
+    assert {"test", "test_baseline", "extended", "extended_baseline"} <= set(ms_i["per_split"])
+    assert (res / "report" / "intellabs_comparison_extended.csv").exists()
     sd = json.loads((res / "sem_detect" / "baselines" / "logrank" / "metrics.json").read_text())
     assert sd["test_baseline@val_threshold"]["n"] == 8                  # 4 papers x human/ai only
     assert sd["rewrite_fraction_flagged_ai@val_threshold"]["n_rewrite"] == 4

@@ -6,6 +6,7 @@ Every loader returns rows in the UNIFIED_COLUMNS schema so that splitting,
 auditing, training and evaluation never depend on dataset-specific columns.
 """
 
+import contextlib
 import hashlib
 import json
 import os
@@ -158,6 +159,23 @@ class ExclusionLog:
         if f.empty:
             return {}
         return {f"{p}:{r}": int(n) for (p, r), n in f.groupby(["partition", "reason"]).size().items()}
+
+
+@contextlib.contextmanager
+def file_lock(path):
+    """
+    Exclusive lock around a read-modify-write of a shared file, so that two scripts running on
+    different GPUs cannot overwrite each other's rows (Linux/macOS; a no-op where fcntl is missing).
+    """
+    path = Path(str(path) + ".lock")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as fh:
+        try:
+            import fcntl
+            fcntl.flock(fh, fcntl.LOCK_EX)
+        except ImportError:
+            pass
+        yield
 
 
 def jsonable(obj):

@@ -1,6 +1,7 @@
 """
 06_run_baselines.py
-Run the 8 baselines on the test_baseline subset (nested inside the model test set).
+Run the 8 baselines on the test_baseline subset (nested inside the model test set) and, when the
+extended manifest exists, on extended_baseline (nested inside the extended subset).
 
 - Validation sample (whole papers, common.val_rows) -> threshold calibration ONLY.
 - Train sample (whole papers, common.train_rows) -> fits GLTR / MFD heads ONLY.
@@ -54,7 +55,8 @@ def main():
     from src.baselines.statistical.token_stats import compute_token_stats, load_causal_lm, release
     from src.baselines.zero_shot import fast_detectgpt
     from src.data.common import (
-        cache_dir, dataset_dir_name, load_config, load_json, manifest_dir, resolve_path, save_json, set_seed,
+        cache_dir, dataset_dir_name, file_lock, load_config, load_json, manifest_dir, resolve_path, save_json,
+        set_seed,
     )
     from src.data.splits import cap_by_papers
     from src.evaluation.aggregate import comparison_row, merge_comparison_rows, save_comparison_table
@@ -80,6 +82,8 @@ def main():
         "val": cap_by_papers(binary(val), com["val_rows"], seed).reset_index(drop=True),
         "test_baseline": binary(test_b),
     }
+    if (mdir / "extended_baseline.parquet").exists():
+        sets["extended_baseline"] = binary(pd.read_parquet(mdir / "extended_baseline.parquet"))
     rewrite = test_b[test_b["label"] == 2].reset_index(drop=True)
     if len(rewrite):
         sets["rewrite"] = rewrite
@@ -89,8 +93,13 @@ def main():
     out_root = res_root / "baselines"
     bcache = cache_dir(cfg, ds) / "baselines"
 
+    eval_sets = [k for k in ("test_baseline", "extended_baseline") if k in sets]
+
     def done(name):
-        return (out_root / name / "metrics.json").exists() and not args.force
+        p = out_root / name / "metrics.json"
+        if args.force or not p.exists():
+            return False
+        return all(f"{k}@val_threshold" in load_json(p) for k in eval_sets)     # re-run if a subset was added later
 
     # ------------------------------------------------ shared token statistics
     stats = {}
@@ -185,29 +194,32 @@ def main():
             thr = calibrate_threshold(sets["val"]["label"], scores["val"], com["threshold_objective"])
             m = {"baseline": name, "display": meta["display"], "type": meta["type"], "registry": meta,
                  "info": info, "val_threshold": thr, "n_val": len(sets["val"]),
-                 "val@val_threshold": binary_metrics(sets["val"]["label"], scores["val"], thr),
-                 "test_baseline@val_threshold": binary_metrics(sets["test_baseline"]["label"],
-                                                               scores["test_baseline"], thr)}
-            if name in PROBABILITY_OUTPUT:
-                m["test_baseline@0.5"] = binary_metrics(sets["test_baseline"]["label"], scores["test_baseline"], 0.5)
+                 "val@val_threshold": binary_metrics(sets["val"]["label"], scores["val"], thr)}
+            for k in eval_sets:
+                m[f"{k}@val_threshold"] = binary_metrics(sets[k]["label"], scores[k], thr)
+                if name in PROBABILITY_OUTPUT:
+                    m[f"{k}@0.5"] = binary_metrics(sets[k]["label"], scores[k], 0.5)
             if "rewrite" in scores:
                 m["rewrite_fraction_flagged_ai@val_threshold"] = {
                     "n_rewrite": len(scores["rewrite"]),
                     "fraction": float((scores["rewrite"] >= thr).mean()),
                     "note": "descriptive only; rewrite is not part of any classification metric"}
-            pred = prediction_frame(sets["test_baseline"], score=scores["test_baseline"], threshold=thr)
-            save_predictions(pred, odir / "predictions_test_baseline.csv")
+            for k in eval_sets:
+                pred = prediction_frame(sets[k], score=scores[k], threshold=thr)
+                save_predictions(pred, odir / f"predictions_{k}.csv")
             save_json(m, odir / "metrics.json")
             mt = m["test_baseline@val_threshold"]
             print(f"[baselines] {name}: test_baseline roc_auc={mt['roc_auc']} macro_f1@val_thr={mt['macro_f1']}")
-        rows.append(comparison_row(m["display"], m["type"], "test_baseline", "val_calibrated",
-                                   m["test_baseline@val_threshold"]))
-        if "test_baseline@0.5" in m:
-            rows.append(comparison_row(m["display"], m["type"], "test_baseline", "0.5", m["test_baseline@0.5"]))
+        for k in eval_sets:
+            rows.append(comparison_row(m["display"], m["type"], k, "val_calibrated", m[f"{k}@val_threshold"]))
+            if f"{k}@0.5" in m:
+                rows.append(comparison_row(m["display"], m["type"], k, "0.5", m[f"{k}@0.5"]))
 
-    table = merge_comparison_rows(res_root / "comparison_table.json", rows)
-    save_comparison_table(table, res_root)
-    save_json({"dataset": ds, "baselines": names, "sample_sizes": {k: len(v) for k, v in sets.items()},
+    with file_lock(res_root / "comparison_table.json"):           # two GPUs may finish at the same time
+        table = merge_comparison_rows(res_root / "comparison_table.json", rows)
+        save_comparison_table(table, res_root)
+    finished = sorted(p.parent.name for p in out_root.glob("*/metrics.json"))      # all baselines on disk
+    save_json({"dataset": ds, "baselines": finished, "sample_sizes": {k: len(v) for k, v in sets.items()},
                "config": bcfg}, out_root / "run_summary.json")
     print(f"[baselines] table: {res_root / 'comparison_table.csv'}")
     return 0

@@ -31,6 +31,7 @@ data:
     model_eval_max_rows: 30000         # null = full official test
     baseline_eval_max_rows: 600
     extended_max_rows: 30000           # null = full extended (after overlap exclusion)
+    extended_baseline_eval_max_rows: 600   # baselines are also scored on this subset nested in extended
     # Narrative review fields, joined with a blank line in THIS order.
     text_fields_allow:
       - review

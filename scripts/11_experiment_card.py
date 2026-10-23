@@ -63,6 +63,10 @@ def pct(x):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--datasets", nargs="+", default=list(DATASETS), choices=DATASETS)
+    args = ap.parse_args()
     cfg = load_config()
     res_root = resolve_path(cfg, "results_dir", "outputs/results")
     out = res_root / "report"
@@ -79,7 +83,7 @@ def main():
           "| item | value |", "|---|---|"] + [f"| {k} | {v} |" for k, v in card["environment"].items()] + [""]
     limits = []
 
-    for ds in DATASETS:
+    for ds in args.datasets:
         dd = dataset_dir_name(cfg, ds)
         d = {}
         card["datasets"][ds] = d

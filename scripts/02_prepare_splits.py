@@ -5,7 +5,7 @@ then apply whole-paper compute caps and write manifests.
 
 Outputs (per dataset folder: intellabs | sem_detect):
   outputs/audit/<ds>/leakage_audit.json, audit_status.json
-  outputs/manifests/<ds>/{train,val,test,test_baseline[,extended]}.parquet
+  outputs/manifests/<ds>/{train,val,test,test_baseline[,extended,extended_baseline]}.parquet
   outputs/manifests/<ds>/exclusions.parquet, summary.json, loader_stats.json
 
 Run from the project root:
@@ -69,7 +69,8 @@ def full_partitions_intellabs(cfg, seed, use_cache):
             parts["extended"] = ext.loc[~overlap].copy()
     caps = {"train": icfg.get("train_max_rows"), "val": icfg.get("val_max_rows"),
             "test": icfg.get("model_eval_max_rows"), "test_baseline": icfg.get("baseline_eval_max_rows"),
-            "extended": icfg.get("extended_max_rows")}
+            "extended": icfg.get("extended_max_rows"),
+            "extended_baseline": icfg.get("extended_baseline_eval_max_rows")}
     return parts, caps, stats, log
 
 
@@ -97,6 +98,8 @@ def apply_caps(parts, caps, seed, dataset, log):
     # human/ai rows count toward the cap (rewrite rows of chosen papers are kept for diagnostics).
     mask = binary_rows(out["test"]) if dataset == "semdetect" else None
     out["test_baseline"] = cap_by_papers(out["test"], caps.get("test_baseline"), seed, count_mask=mask)
+    if "extended" in out:             # baselines are also compared on a subset nested inside extended
+        out["extended_baseline"] = cap_by_papers(out["extended"], caps.get("extended_baseline"), seed)
     return out
 
 

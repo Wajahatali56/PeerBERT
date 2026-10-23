@@ -114,6 +114,9 @@ def check_invariants(parts, caps, disjoint=("train", "val", "test"), baseline_co
     if "test_baseline" in parts and "test" in parts:
         if not set(parts["test_baseline"]["row_id"]) <= set(parts["test"]["row_id"]):
             fails.append("test_baseline is not nested inside test")
+    if "extended_baseline" in parts and "extended" in parts:
+        if not set(parts["extended_baseline"]["row_id"]) <= set(parts["extended"]["row_id"]):
+            fails.append("extended_baseline is not nested inside extended")
     for name, cap in caps.items():
         if cap is None or name not in parts:
             continue

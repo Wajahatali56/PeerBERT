@@ -395,8 +395,15 @@ def train_from_manifests(dataset, cfg, tcfg, seeds, tag="final", max_train_rows=
     runs = []
     for s in seeds:
         runs.append(train_one(train, val, tcfg, dataset, root / f"seed{s}", s))
-    summary = {"dataset": dataset, "tag": tag, "variant": variant, "audit_status": status, "seeds": list(seeds),
-               "train_rows": len(train), "val_rows": len(val),
+    # Seeds may be trained by separate processes (one per GPU): summarise every finished seed of this tag.
+    finished = []
+    seed_dirs = [d for d in root.glob("seed*") if d.is_dir() and d.name[4:].isdigit()]   # not seed_summary.json
+    for d in sorted(seed_dirs, key=lambda d: int(d.name[4:])):
+        if (d / "done.json").exists():
+            finished.append(json.loads((d / "done.json").read_text()))
+    runs = finished or runs
+    summary = {"dataset": dataset, "tag": tag, "variant": variant, "audit_status": status,
+               "seeds": [r["seed"] for r in runs], "train_rows": len(train), "val_rows": len(val),
                "smoke_limits": {"max_train_rows": max_train_rows, "max_val_rows": max_val_rows},
                "best_val_macro_f1": seed_summary([{"macro_f1": r["best_val_macro_f1"]} for r in runs],
                                                  keys=("macro_f1",)),

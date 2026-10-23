@@ -1,6 +1,7 @@
 """
 05_evaluate.py
-Evaluate trained PeerBERT checkpoints on test, test_baseline and (IntelLabs, optional) extended.
+Evaluate trained PeerBERT checkpoints on test, test_baseline and (IntelLabs, optional) extended and
+extended_baseline.
 
 Per seed:
 - IntelLabs (binary): metrics at threshold 0.5 and at the VALIDATION-calibrated threshold,
@@ -31,7 +32,7 @@ def parse():
     ap.add_argument("--dataset", choices=("intellabs", "semdetect"), required=True)
     ap.add_argument("--tag", default="final")
     ap.add_argument("--seeds", type=int, nargs="+", default=None)
-    ap.add_argument("--splits", nargs="+", default=["test", "test_baseline", "extended"])
+    ap.add_argument("--splits", nargs="+", default=["test", "test_baseline", "extended", "extended_baseline"])
     ap.add_argument("--n-boot", type=int, default=1000)
     ap.add_argument("--gpu", type=int, default=0)
     ap.add_argument("--config", default=None)
@@ -60,8 +61,12 @@ def evaluate_split(pred, dataset, val_thr, n_boot, seed, n_words=None):
     out["by_conf_year@0.5"] = by_group(b, "conf_year")
     if n_words is not None:
         out["by_length_tercile@0.5"] = by_length_bin(b, b["row_id"].map(n_words).values)
+    out["by_conf_year@val_threshold"] = by_group(b, "conf_year", val_thr)
+    if n_words is not None:
+        out["by_length_tercile@val_threshold"] = by_length_bin(b, b["row_id"].map(n_words).values, threshold=val_thr)
     if dataset == "intellabs":
         out["by_generator@0.5"] = by_generator(b)
+        out["by_generator@val_threshold"] = by_generator(b, val_thr)
     if n_boot:
         out["cluster_bootstrap_ci"] = {
             "roc_auc": cluster_bootstrap_ci(b["label"], b["score"], b["paper_key"], auc_fn, n_boot, seed=seed),
@@ -76,7 +81,7 @@ def main():
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
     import pandas as pd
 
-    from src.data.common import dataset_dir_name, load_config, load_json, manifest_dir, resolve_path, save_json
+    from src.data.common import dataset_dir_name, file_lock, load_config, load_json, manifest_dir, resolve_path, save_json
     from src.evaluation.aggregate import (
         comparison_row, merge_comparison_rows, save_comparison_table, seed_summary,
     )
@@ -123,7 +128,7 @@ def main():
                 save_predictions(pred, pp)
                 save_json(trunc, pp.with_suffix(".truncation.json"))
             n_words = pd.Series(man["text"].str.split().str.len().values, index=man["row_id"].values)
-            m = evaluate_split(pred, ds, val_thr, args.n_boot if split != "test_baseline" else 0, seed, n_words)
+            m = evaluate_split(pred, ds, val_thr, args.n_boot if split not in ("test_baseline", "extended_baseline") else 0, seed, n_words)
             m["truncation"] = trunc
             seed_out["splits"][split] = m
             print(f"[eval] seed {seed} {split}: binary@0.5 macro_f1={m['binary@0.5']['macro_f1']} "
@@ -159,8 +164,9 @@ def main():
         summary["per_split"][split] = block
     summary["note"] = "mean +/- std over seeds (ddof=1); claim improvements only with all seeds evaluated"
     save_json(summary, out_root / "metrics_summary.json")
-    table = merge_comparison_rows(res_root / "comparison_table.json", rows)
-    save_comparison_table(table, res_root)
+    with file_lock(res_root / "comparison_table.json"):
+        table = merge_comparison_rows(res_root / "comparison_table.json", rows)
+        save_comparison_table(table, res_root)
     print(f"[eval] summary: {out_root / 'metrics_summary.json'}\n[eval] table: {res_root / 'comparison_table.csv'}")
     return 0
 

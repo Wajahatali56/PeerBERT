@@ -185,3 +185,52 @@ def test_run_jobs_prints_complete_lines_only_once(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "[j] first" in out and "[j] half line" in out and "it/s" not in out
     assert out.count("[j] first") == 1
+
+
+# ---------------------------------------------------------------- IntelLabs-only study: extended + parallel seeds
+def test_extended_is_loaded_nested_baseline_subset_built_and_overlaps_excluded(cfg, hub, tmp_path, monkeypatch):
+    import yaml
+    for gen in ("claude", "gpt4o"):
+        hub.add("calibration", gen, "ICLR", 2021, intel_frame("ICLR", 2021, gen, n_papers=10))
+        hub.add("test", gen, "ICLR", 2021, intel_frame("ICLR", 2021, gen, n_papers=5, pid_offset=500))
+    ext = intel_frame("ICLR", 2021, "gpt4o", n_papers=8, pid_offset=0)               # papers 1000-1007 are in calibration
+    hub.add("extended", "gpt4o", "ICLR", 2021, pd.concat([ext, intel_frame("ICLR", 2021, "gpt4o", n_papers=6,
+                                                                           pid_offset=900)], ignore_index=True))
+    cfg["data"]["intellabs"].update(use_extended=True, extended_baseline_eval_max_rows=12)
+    p = tmp_path / "cfg.yaml"
+    p.write_text(yaml.safe_dump(cfg))
+    mod = _load_script("02_prepare_splits.py")
+    real = mod.load_subset
+    monkeypatch.setattr(mod, "load_subset", lambda c, s, use_cache=True: real(
+        c, s, lister=hub.lister, fetcher=hub.fetcher, use_cache=use_cache))
+    assert mod.main(["--config", str(p), "--dataset", "intellabs"]) == 0
+    assert mod.main(["--config", str(p), "--dataset", "intellabs", "--verify-only"]) == 0
+    from src.data.common import manifest_dir
+    md = manifest_dir(cfg, "intellabs")
+    extended, base = pd.read_parquet(md / "extended.parquet"), pd.read_parquet(md / "extended_baseline.parquet")
+    train, val = pd.read_parquet(md / "train.parquet"), pd.read_parquet(md / "val.parquet")
+    assert set(extended["paper_key"]).isdisjoint(set(train["paper_key"]) | set(val["paper_key"]))   # overlap removed
+    assert set(base["row_id"]) <= set(extended["row_id"]) and len(base) <= 12
+    excl = pd.read_parquet(md / "exclusions.parquet")
+    assert "paper_in_train_or_val" in set(excl["reason"])
+    # verification catches a baseline subset that is not nested inside extended
+    base.iloc[:1].assign(row_id="not-in-extended").pipe(lambda f: pd.concat([base, f])).to_parquet(
+        md / "extended_baseline.parquet", index=False)
+    assert mod.main(["--config", str(p), "--dataset", "intellabs", "--verify-only"]) == 3
+
+
+def test_file_lock_serialises_writers(tmp_path):
+    import threading
+    from src.data.common import file_lock
+    target, order = tmp_path / "table.json", []
+
+    def writer(tag):
+        with file_lock(target):
+            order.append(f"{tag}-start")
+            time.sleep(0.3)
+            order.append(f"{tag}-end")
+
+    threads = [threading.Thread(target=writer, args=(t,)) for t in "ab"]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+    assert order[0][0] == order[1][0] and order[2][0] == order[3][0]      # no interleaving: a-start a-end b-start b-end
