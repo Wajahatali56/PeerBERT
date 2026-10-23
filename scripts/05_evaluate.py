@@ -145,7 +145,10 @@ def main():
     if not per_seed:
         print("[eval] nothing evaluated")
         return 1
-    summary = {"dataset": ds, "tag": args.tag, "seeds": list(per_seed), "per_split": {}}
+    sp = model_root(cfg, ds) / args.tag / "seed_summary.json"
+    seed_info = load_json(sp) if sp.exists() else {}
+    summary = {"dataset": ds, "tag": args.tag, "variant": seed_info.get("variant"),
+               "seeds": list(per_seed), "per_split": {}}
     for split in manifests:
         block = {}
         for key in ("binary@0.5", "binary@val_threshold"):

@@ -42,6 +42,10 @@ threshold:
 # Ablations (scripts/07_run_ablation.py), selected on VALIDATION Macro-F1, one seed.
 ablation:
   seed: 42
+  # Selection rule, fixed in advance: keep default_variant unless another variant beats it on
+  # VALIDATION Macro-F1 by at least min_gain (a margin meant to exceed single-seed noise).
+  default_variant: rdrop_1.0      # = the base configuration above (weighted CE + R-Drop 1.0)
+  min_gain: 0.005
   variants:
     - {name: ce_unweighted,     loss: {type: ce,              rdrop_alpha: 0.0}}
     - {name: ce_weighted,       loss: {type: weighted_ce,     rdrop_alpha: 0.0}}

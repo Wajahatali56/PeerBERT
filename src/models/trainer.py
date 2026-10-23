@@ -14,6 +14,7 @@ Custom single-GPU PyTorch training loop for PeerBERT (no HF Trainer, no DataPara
 
 import copy
 import gc
+import hashlib
 import json
 import math
 import random
@@ -25,7 +26,7 @@ import pandas as pd
 import torch
 import yaml
 
-from src.data.common import ROOT, jsonable, save_json, set_seed
+from src.data.common import ROOT, config_hash, jsonable, save_json, set_seed
 from src.evaluation.metrics import binary_metrics, calibrate_threshold, multiclass_metrics
 from src.evaluation.predict import prediction_frame, run_inference, softmax
 
@@ -51,9 +52,15 @@ def load_train_config(path=None, overrides=None):
 
 
 def amp_dtype(setting, device):
+    """
+    "off" -> fp32; "fp16" -> fp16; "auto"/"bf16" -> bf16 on GPUs with native support
+    (compute capability >= 8, e.g. A100/L4), otherwise fp16 with a GradScaler. Turing GPUs such as
+    the T4 only emulate bf16 (slow), although recent PyTorch reports it as "supported".
+    """
     if setting == "off" or device.type != "cuda":
         return None
-    if setting in ("auto", "bf16") and torch.cuda.is_bf16_supported():
+    if setting in ("auto", "bf16") and torch.cuda.get_device_capability(device)[0] >= 8 \
+            and torch.cuda.is_bf16_supported():
         return torch.bfloat16
     return torch.float16
 
@@ -135,14 +142,42 @@ def _set_rng_state(s):
         torch.cuda.set_rng_state_all(s["cuda"])
 
 
+def run_key(tcfg, dataset, seed, train_df, val_df):
+    """
+    Fingerprint of everything that determines a run's result: configuration (minus settings that
+    only affect speed or bookkeeping), dataset, seed and the exact train/validation rows.
+    A finished or interrupted run is reused only when this matches, so a changed setting can
+    never silently mix with results from an earlier configuration.
+    """
+    cfg = {k: v for k, v in tcfg.items() if k != "ablation"}
+    cfg["training"] = {k: v for k, v in tcfg["training"].items()
+                       if k not in ("seeds", "gpu_id", "num_workers", "eval_batch_size")}
+
+    def digest(frame):
+        return hashlib.sha256("\n".join(frame["row_id"].astype(str)).encode("utf-8")).hexdigest()[:16]
+
+    return config_hash({"cfg": cfg, "dataset": dataset, "seed": int(seed),
+                        "train_rows": digest(train_df), "val_rows": digest(val_df)})
+
+
+def _stale_run_error(out_dir, what):
+    return RuntimeError(
+        f"{out_dir} holds {what} trained with a different configuration or different data than the "
+        f"current run. Use another --tag, or delete that folder to retrain from scratch.")
+
+
 # ---------------------------------------------------------------- training
 def train_one(train_df, val_df, tcfg, dataset, out_dir, seed, resume=True):
     """Train one seed. Returns run_info dict (also saved as run_info.json)."""
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    key = run_key(tcfg, dataset, seed, train_df, val_df)
     if (out_dir / "done.json").exists():
-        print(f"[train] {out_dir} already finished; skipping (delete done.json to retrain)")
-        return json.loads((out_dir / "done.json").read_text())
+        finished = json.loads((out_dir / "done.json").read_text())
+        if finished.get("run_key") != key:
+            raise _stale_run_error(out_dir, "a finished run")
+        print(f"[train] {out_dir} already finished with this configuration; skipping")
+        return finished
 
     mcfg, tr, lcfg = tcfg["model"], tcfg["training"], tcfg["loss"]
     class_names = CLASS_NAMES[dataset]
@@ -150,6 +185,8 @@ def train_one(train_df, val_df, tcfg, dataset, out_dir, seed, resume=True):
     set_seed(seed)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     dtype = amp_dtype(tr.get("amp", "auto"), device)
+    if device.type == "cuda":
+        torch.cuda.reset_peak_memory_stats()
     t0 = time.time()
 
     head = mcfg.get("head", "linear")
@@ -187,6 +224,8 @@ def train_one(train_df, val_df, tcfg, dataset, out_dir, seed, resume=True):
     state_p = out_dir / "last_state.pt"
     if resume and state_p.exists():
         ck = torch.load(state_p, map_location="cpu", weights_only=False)
+        if ck.get("run_key") != key:
+            raise _stale_run_error(out_dir, "an interrupted run")
         model.load_state_dict(ck["model"])
         opt.load_state_dict(ck["opt"])
         sched.load_state_dict(ck["sched"])
@@ -261,7 +300,7 @@ def train_one(train_df, val_df, tcfg, dataset, out_dir, seed, resume=True):
             state["bad_epochs"] += 1
         state["epoch_done"] = epoch
         torch.save({"model": model.state_dict(), "opt": opt.state_dict(), "sched": sched.state_dict(),
-                    "scaler": scaler.state_dict(), "state": state, "rng": _rng_state()}, state_p)
+                    "scaler": scaler.state_dict(), "state": state, "rng": _rng_state(), "run_key": key}, state_p)
         save_json(state["history"], out_dir / "history.json")
         if state["bad_epochs"] >= int(tr["early_stopping_patience"]):
             print(f"[train] early stopping after epoch {epoch}")
@@ -272,12 +311,14 @@ def train_one(train_df, val_df, tcfg, dataset, out_dir, seed, resume=True):
     if k == 2:
         val_threshold = calibrate_threshold(vp["label"], vp["score"], tcfg.get("threshold", {}).get("objective", "macro_f1"))
     info = {
-        "dataset": dataset, "seed": seed, "best_val_macro_f1": state["best"], "epochs_run": state["epoch_done"],
+        "dataset": dataset, "seed": seed, "run_key": key, "best_val_macro_f1": state["best"],
+        "epochs_run": state["epoch_done"],
         "val_threshold": val_threshold, "skipped_nonfinite_steps": state["skipped_nonfinite"],
         "rdrop_passes_differ": state["rdrop_passes_differ"], "amp": str(dtype), "device": str(device),
         "model_info": model_info, "class_weights": weights.tolist(), "train_config": tcfg,
         "truncation": {"train": train_ds.truncation_stats(), "val": val_ds.truncation_stats()},
         "minutes": round((time.time() - t0) / 60, 2), "best_dir": str(out_dir / "best"),
+        "peak_gpu_gb": round(torch.cuda.max_memory_allocated() / 1e9, 2) if device.type == "cuda" else None,
     }
     save_json(info, out_dir / "run_info.json")
     save_json(info, out_dir / "done.json")
@@ -303,13 +344,36 @@ def predict_proba(model_dir, texts, tcfg, eager_attention=False):
     return proba, stats
 
 
+# ---------------------------------------------------------------- variants (ablation)
+def resolve_variant(cfg, dataset, tcfg, name):
+    """
+    Training configuration for a named variant of configs/train.yaml (ablation.variants).
+    name None -> the base configuration; "auto" -> the variant selected by the validation-based
+    ablation of this dataset (outputs/results/<ds>/ablation.json). Returns (tcfg, label).
+    """
+    if name in (None, "", "base"):
+        return tcfg, "base"
+    if name == "auto":
+        from src.data.common import dataset_dir_name, load_json, resolve_path
+        p = resolve_path(cfg, "results_dir", "outputs/results") / dataset_dir_name(cfg, dataset) / "ablation.json"
+        if not p.exists():
+            raise FileNotFoundError(f"{p} not found: run scripts/07_run_ablation.py first, or pass an explicit --variant")
+        name = load_json(p)["selected_variant"]
+    variants = {v["name"]: v for v in tcfg.get("ablation", {}).get("variants", [])}
+    if name not in variants:
+        raise KeyError(f"unknown variant '{name}'. Known: {sorted(variants)}")
+    v = variants[name]
+    return deep_merge(tcfg, {k: v[k] for k in ("loss", "model", "training") if k in v}), name
+
+
 # ---------------------------------------------------------------- script entry
 def model_root(cfg, dataset):
     from src.data.common import dataset_dir_name, resolve_path
     return resolve_path(cfg, "model_dir", "outputs/models") / dataset_dir_name(cfg, dataset)
 
 
-def train_from_manifests(dataset, cfg, tcfg, seeds, tag="final", max_train_rows=None, max_val_rows=None):
+def train_from_manifests(dataset, cfg, tcfg, seeds, tag="final", max_train_rows=None, max_val_rows=None,
+                         variant="base"):
     """
     Audit gate -> manifests -> one run per seed -> seed summary.
     Models: outputs/models/<ds>/<tag>/seed<k>/. Smoke-test limits keep whole papers.
@@ -331,7 +395,7 @@ def train_from_manifests(dataset, cfg, tcfg, seeds, tag="final", max_train_rows=
     runs = []
     for s in seeds:
         runs.append(train_one(train, val, tcfg, dataset, root / f"seed{s}", s))
-    summary = {"dataset": dataset, "tag": tag, "audit_status": status, "seeds": list(seeds),
+    summary = {"dataset": dataset, "tag": tag, "variant": variant, "audit_status": status, "seeds": list(seeds),
                "train_rows": len(train), "val_rows": len(val),
                "smoke_limits": {"max_train_rows": max_train_rows, "max_val_rows": max_val_rows},
                "best_val_macro_f1": seed_summary([{"macro_f1": r["best_val_macro_f1"]} for r in runs],
