@@ -25,59 +25,63 @@ The two datasets are never mixed. Only the real files and their real labels are 
 Every result file is produced by the scripts below. `scripts/09_build_report.py` only reports
 artefacts that exist and marks everything else as **NOT RUN**.
 
-## Running on Google Colab (recommended)
+## Running the study
 
-### One notebook for everything
-`notebooks/PeerBERT_full_experiments.ipynb` is self-contained: it writes the project code into
-the runtime (no clone needed). It then runs every experiment and shows tables, figures and a
-short analysis after each one. Open it in Colab, choose a T4 GPU, and use **Run all**.
-- Figures are saved as PNG and PDF under `outputs/results/figures`.
-- The notebook is generated from this repository; rebuild it with
-  `python notebooks/make_full_notebook.py` after changing any code.
+### One notebook for everything (Kaggle or Colab)
+`notebooks/PeerBERT_full_experiments.ipynb` is self-contained: it writes the project code into the
+runtime (no clone needed), runs every experiment on the original datasets and models, and shows
+tables, figures and a short analysis after each one. It is generated from this repository:
+`python notebooks/make_full_notebook.py [output.ipynb]` (re-run after changing any code).
 
-### Step-by-step runner
+- **Kaggle** (recommended): import the notebook, choose *GPU T4 x2* and *Internet: On*, run all.
+  The two datasets train side by side, one per GPU. The full study takes more than one 12-hour
+  session, so it can be run in stages (`STAGE = "1"` ... `"4"` in the Settings cell). Add the
+  previous version's output as an input and the setup cell restores it. Checkpoints of the ablation
+  variants are deleted after evaluation to stay inside Kaggle's 20 GB output limit.
+- **Colab**: the same notebook; outputs go to Google Drive.
+- Finished work is skipped when a step is re-run, and an interrupted training run resumes from its last
+  epoch. A run is reused only if its configuration and data are unchanged; otherwise the step stops
+  with an error instead of mixing results.
 
-Open `notebooks/kaggle_runner.ipynb` in Colab, select a T4 GPU, and run the cells top to bottom.
-- Outputs are written to `MyDrive/PeerBERT_outputs`.
-- After a disconnect, run cells 1-4 again and continue. Finished steps are skipped and
-  training resumes from its last epoch.
-- The same notebook also runs on Kaggle, where outputs go to `/kaggle/working`.
+If training runs out of GPU memory, edit `configs/train.yaml`: lower `training.batch_size` (raise
+`grad_accum`) or set `training.gradient_checkpointing: true`.
 
-If training runs out of GPU memory, edit `configs/train.yaml`:
-1. Lower `training.batch_size` and raise `grad_accum`.
-2. Or set `training.gradient_checkpointing: true`.
+### Protocol (selection happens on validation data only)
+1. Data preparation: paper-level splits and the leakage audit.
+2. Ablation at a reduced budget, one seed per variant. The default configuration is kept unless a
+   variant beats it on validation Macro-F1 by at least `ablation.min_gain` (fixed in advance).
+3. Final training of the selected variant, 3 seeds per dataset.
+4. Evaluation, baselines, cross-dataset transfer and explainability.
+5. Report and **experiment card** (`scripts/11_experiment_card.py`): exact settings, data counts, library
+   versions, a code hash and all limitations, written from the artefacts of the run.
 
-## Pipeline
+## Pipeline (command line)
 
 ```bash
-export PRAD_WORK_DIR=/kaggle/working        # or /content on Colab; outputs go here
+export PRAD_WORK_DIR=/kaggle/working        # outputs go here
 pip install -q -r requirements.txt          # torch is preinstalled on Colab/Kaggle
-python -m pytest -q tests                   # toy-data tests
+python -m pytest -q tests                   # code tests (no data, no network)
 
-python scripts/00_inspect_datasets.py --include-semdetect   # read-only inspection
-python scripts/01_run_audit.py                              # leakage audit only
 python scripts/02_prepare_splits.py                         # audit + paper-level manifests
 python scripts/02_prepare_splits.py --verify-only           # re-check manifests offline
 
 python scripts/03_train_intellabs.py --smoke                # 1-epoch pipeline check
-python scripts/03_train_intellabs.py                        # 3 seeds (train.yaml)
-python scripts/04_train_semdetect.py
+python scripts/07_run_ablation.py --dataset intellabs --max-train-rows 6000 --max-val-rows 2500 --epochs 2
+python scripts/07_run_ablation.py --dataset semdetect --max-train-rows 6000 --max-val-rows 2500 --epochs 2
+python scripts/03_train_intellabs.py --variant auto         # 3 seeds, variant selected on validation
+python scripts/04_train_semdetect.py --variant auto
 python scripts/05_evaluate.py --dataset intellabs
 python scripts/05_evaluate.py --dataset semdetect
 
 python scripts/06_run_baselines.py --dataset intellabs
 python scripts/06_run_baselines.py --dataset semdetect
-python scripts/07_run_ablation.py --dataset intellabs       # validation-based selection
 python scripts/08_cross_dataset.py --source intellabs       # no retraining
 python scripts/08_cross_dataset.py --source semdetect
-python scripts/10_explain.py --dataset intellabs           # XAI (attention + Integrated Gradients)
+python scripts/10_explain.py --dataset intellabs            # attention + Integrated Gradients + sanity check
 python scripts/10_explain.py --dataset semdetect
-python scripts/09_build_report.py                           # run last: collects everything
+python scripts/09_build_report.py                           # collects everything
+python scripts/11_experiment_card.py                        # methods and limitations record
 ```
-
-Every heavy step is restart-safe: loaded subsets are cached as parquet, training resumes from
-`last_state.pt` and finished seeds are skipped (`done.json`), and predictions/baseline scores
-are cached. Train on a single GPU (`--gpu`, sets `CUDA_VISIBLE_DEVICES` before torch loads).
 
 ## Data protocol (`src/data`)
 
@@ -168,6 +172,9 @@ Each review is explained for the model's predicted class with:
   completeness gap (`delta`) is reported.
 - **Faithfulness** (ERASER): comprehensiveness and sufficiency at 10% and 20%, compared
   with a random ranking. Spearman agreement between |IG| and attention is also reported.
+- **Sanity check** (Adebayo et al., 2018): the same Integrated Gradients procedure on a randomly
+  initialised copy of the model; the rank correlation with the trained model's attributions should
+  be low (`--sanity-n`).
 
 Outputs:
 - `explanations.jsonl`

@@ -178,6 +178,54 @@ def test_train_one_rdrop_resume_and_predict(tiny, tmp_path):
     assert proba.shape == (24, 2) and np.allclose(proba.sum(1), 1) and stats["n"] == 24
 
 
+def test_stale_runs_are_refused(tiny, tmp_path):
+    import copy
+    from src.models.trainer import load_train_config, train_one
+    tcfg = load_train_config(overrides={
+        "model": {"name": tiny["modernbert"], "max_length": 32},
+        "training": {"epochs": 1, "batch_size": 4, "grad_accum": 1, "eval_batch_size": 8, "num_workers": 0},
+        "loss": {"type": "ce", "rdrop_alpha": 0.0}})
+    df = _frames()
+    first = train_one(df.iloc[:16], df.iloc[16:], tcfg, "intellabs", tmp_path / "r", seed=3)
+    assert train_one(df.iloc[:16], df.iloc[16:], tcfg, "intellabs", tmp_path / "r", seed=3)["run_key"] == first["run_key"]
+    changed = copy.deepcopy(tcfg)
+    changed["training"]["lr"] = 1e-4
+    with pytest.raises(RuntimeError, match="different configuration or different data"):
+        train_one(df.iloc[:16], df.iloc[16:], changed, "intellabs", tmp_path / "r", seed=3)
+    with pytest.raises(RuntimeError, match="different configuration or different data"):
+        train_one(df.iloc[:12], df.iloc[16:], tcfg, "intellabs", tmp_path / "r", seed=3)      # other rows
+    speed_only = copy.deepcopy(tcfg)
+    speed_only["training"].update(num_workers=2, gpu_id=1, eval_batch_size=4)
+    train_one(df.iloc[:16], df.iloc[16:], speed_only, "intellabs", tmp_path / "r", seed=3)     # still reusable
+
+
+def test_amp_dtype_uses_bf16_only_with_native_support(monkeypatch):
+    from src.models import trainer
+    cuda = torch.device("cuda")
+    monkeypatch.setattr(torch.cuda, "is_bf16_supported", lambda *a, **k: True)       # what recent PyTorch says on a T4
+    monkeypatch.setattr(torch.cuda, "get_device_capability", lambda *a, **k: (7, 5))
+    assert trainer.amp_dtype("auto", cuda) == torch.float16                           # T4: fp16 + GradScaler
+    assert trainer.amp_dtype("bf16", cuda) == torch.float16
+    monkeypatch.setattr(torch.cuda, "get_device_capability", lambda *a, **k: (8, 0))
+    assert trainer.amp_dtype("auto", cuda) == torch.bfloat16                          # A100/L4
+    assert trainer.amp_dtype("off", cuda) is None and trainer.amp_dtype("auto", torch.device("cpu")) is None
+
+
+def test_ig_retries_with_smaller_internal_batch_on_oom(monkeypatch):
+    from src.xai import integrated_gradients as igm
+    calls = []
+
+    def fake(model, ids, special, target, device, pad_id, n_steps, ibs):
+        calls.append(ibs)
+        if ibs > 1:
+            raise torch.cuda.OutOfMemoryError("out of memory")
+        return "ok"
+
+    monkeypatch.setattr(igm, "ig_attributions", fake)
+    assert igm.ig_attributions_safe(None, [1], [False], 0, None, 0, 10, 8) == "ok"
+    assert calls == [8, 4, 2, 1]
+
+
 def test_rdrop_refused_without_dropout(tiny, tmp_path):
     from src.models.trainer import load_train_config, train_one
     tcfg = load_train_config(overrides={
@@ -284,6 +332,26 @@ def test_xai_attention_ig_faithfulness(tiny):
     assert spearman([1, 2, 3, 4], [1, 2, 3, 5]) == pytest.approx(1.0)
 
 
+def test_weight_randomisation_check(tiny):
+    from src.models.modernbert_classifier import load_trained
+    from src.xai.integrated_gradients import ig_attributions, special_token_mask
+    from src.xai.sanity import randomization_check, randomized_copy
+    model, tok = load_trained(tiny["modernbert"], eager_attention=True)
+    model.float().eval()
+    dev = torch.device("cpu")
+    ids = tok("the paper proposes a novel method with strong results and weak experiments")["input_ids"]
+    special = special_token_mask(tok, ids)
+    ig, _, _, _ = ig_attributions(model, ids, special, 1, dev, tok.pad_token_id, n_steps=20)
+    ex = {"row_id": "r1", "token_ids": ids, "special": special, "pred": 1, "ig": ig.tolist()}
+    rnd = randomized_copy(tiny["modernbert"], seed=123)
+    assert not torch.equal(next(iter(rnd.parameters())), next(iter(model.parameters())))     # really different weights
+    rows = randomization_check(rnd, [ex, dict(ex, row_id="r2")], dev, tok.pad_token_id, n_steps=20)
+    assert [r["row_id"] for r in rows] == ["r1", "r2"] and rows[0]["n_tokens"] == len(ids) - 2
+    for r in rows:
+        assert r["spearman_abs"] is None or -1 <= r["spearman_abs"] <= 1
+        assert r["delta_random_model"] >= 0
+
+
 # ---------------------------------------------------------------- end to end (toy manifests)
 def _toy_manifests(work, cfg):
     from src.data.common import audit_dir, manifest_dir, save_json
@@ -306,7 +374,13 @@ def _toy_manifests(work, cfg):
         test = pd.read_parquet(md / "test.parquet")
         test[test["paper_key"].isin(test["paper_key"].unique()[:4])].to_parquet(md / "test_baseline.parquet",
                                                                                index=False)
-        save_json({"caps": {}}, md / "summary.json")
+        desc = {n: {"rows": len(f), "papers": int(f["paper_key"].nunique()),
+                    "label_counts": {str(k): int(v) for k, v in f["label"].value_counts().sort_index().items()}}
+                for n, f in ((n, pd.read_parquet(md / f"{n}.parquet"))
+                             for n in ("train", "val", "test", "test_baseline"))}
+        save_json({"dataset": ds, "seed": 42, "caps": {"test_baseline": 600}, "audit_status": "WARN",
+                   "full_partitions": {n: desc[n] for n in ("train", "val", "test")}, "manifests": desc,
+                   "exclusions": {}}, md / "summary.json")
         save_json({"status": "WARN", "dataset": ds}, audit_dir(cfg, ds) / "audit_status.json")
 
 
@@ -340,8 +414,14 @@ def test_pipeline_scripts_end_to_end(tiny, tmp_path):
         return r.stdout
 
     S = ROOT / "scripts"
-    run(S / "03_train_intellabs.py", "--train-config", tc_p)
-    run(S / "04_train_semdetect.py", "--train-config", tc_p, "--seeds", "1")
+    # protocol order: ablation (validation selection) first, then the final models from the selected variant
+    out = run(S / "07_run_ablation.py", "--dataset", "intellabs", "--train-config", tc_p, "--variants",
+              "ce_unweighted", "focal_weighted", "--test-rows", "12")
+    assert "ce_unweighted" in out and "selected:" in out
+    run(S / "07_run_ablation.py", "--dataset", "semdetect", "--train-config", tc_p, "--variants", "csm_cosine",
+        "--test-rows", "12")
+    run(S / "03_train_intellabs.py", "--train-config", tc_p, "--variant", "auto")
+    run(S / "04_train_semdetect.py", "--train-config", tc_p, "--seeds", "1", "--variant", "auto")   # cosine head
     run(S / "05_evaluate.py", "--dataset", "intellabs", "--train-config", tc_p, "--n-boot", "20")
     run(S / "05_evaluate.py", "--dataset", "semdetect", "--train-config", tc_p, "--seeds", "1", "--n-boot", "20")
     run(S / "06_run_baselines.py", "--dataset", "intellabs", "--baselines-config", bc_p, "--only",
@@ -349,14 +429,12 @@ def test_pipeline_scripts_end_to_end(tiny, tmp_path):
     run(S / "06_run_baselines.py", "--dataset", "semdetect", "--baselines-config", bc_p, "--only", "logrank", "mfd")
     run(S / "08_cross_dataset.py", "--source", "intellabs", "--train-config", tc_p)
     run(S / "08_cross_dataset.py", "--source", "semdetect", "--train-config", tc_p, "--seeds", "1")
-    out = run(S / "07_run_ablation.py", "--dataset", "intellabs", "--train-config", tc_p, "--variants",
-              "ce_unweighted", "focal_weighted", "csm_cosine")
-    assert "ce_unweighted" in out and "csm_cosine" in out
-    run(S / "07_run_ablation.py", "--dataset", "semdetect", "--train-config", tc_p, "--variants", "csm_cosine")
-    run(S / "09_build_report.py", "--n-boot", "20")
-    run(S / "10_explain.py", "--dataset", "intellabs", "--train-config", tc_p, "--n-per-group", "2", "--n-steps", "8")
+    run(S / "10_explain.py", "--dataset", "intellabs", "--train-config", tc_p, "--n-per-group", "2", "--n-steps", "8",
+        "--sanity-n", "3")
     run(S / "10_explain.py", "--dataset", "semdetect", "--train-config", tc_p, "--n-per-group", "1", "--n-steps", "8",
-        "--min-token-count", "1")
+        "--min-token-count", "1", "--sanity-n", "2")
+    run(S / "09_build_report.py", "--n-boot", "20")
+    run(S / "11_experiment_card.py")
 
     res = work / "outputs" / "results"
     t = pd.read_csv(res / "intellabs" / "comparison_table.csv")
@@ -378,8 +456,22 @@ def test_pipeline_scripts_end_to_end(tiny, tmp_path):
         xs = next((res / dd / "xai" / "final").glob("seed*/summary.json"))
         x = json.loads(xs.read_text())
         assert x["n_examples"] > 0 and "random" in x["faithfulness"]
+        assert x["sanity_randomization"]["n"] > 0 and len(x["sanity_randomization"]["per_example"]) > 0
         assert (xs.parent / "examples.html").exists() and (xs.parent / "top_tokens.csv").exists()
         lines = (xs.parent / "explanations.jsonl").read_text().splitlines()
         assert len(lines) == x["n_examples"]
-    run(S / "09_build_report.py", "--n-boot", "20")
     assert "### Explainability" in (res / "report" / "report.md").read_text()
+
+    # selection protocol: validation-only choice, recorded budget, checkpoints pruned, finals use the variant
+    ab = json.loads((res / "intellabs" / "ablation.json").read_text())
+    assert ab["selected_variant"] in ("ce_unweighted", "focal_weighted") and ab["selection_rule"]
+    assert ab["budget"]["test_sample_rows"] > 0 and all("test_macro_f1" in r for r in ab["rows"])
+    assert not list((work / "outputs" / "models" / "intellabs" / "ablation").glob("*/seed*/best"))
+    fin = json.loads((work / "outputs" / "models" / "intellabs" / "final" / "seed_summary.json").read_text())
+    assert fin["variant"] == ab["selected_variant"]
+    sd_fin = json.loads((work / "outputs" / "models" / "sem_detect" / "final" / "seed_summary.json").read_text())
+    assert sd_fin["variant"] == "csm_cosine"
+    assert json.loads((res / "sem_detect" / "peerbert" / "final" / "metrics_summary.json").read_text())["variant"] == "csm_cosine"
+    card = (res / "report" / "experiment_card.md").read_text()
+    assert "Deviations and limitations" in card and "csm_cosine" in card and "Code hash" in card
+    assert json.loads((res / "report" / "experiment_card.json").read_text())["datasets"]["intellabs"]["model"]["variant"]
