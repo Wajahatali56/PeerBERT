@@ -51,14 +51,22 @@ def full_partitions_intellabs(cfg, seed, use_cache):
     train, val = split_by_paper(pool, icfg["val_fraction_papers"], seed)
     parts = {"train": train, "val": val, "test": test}
     if icfg.get("use_extended"):
-        ext, stats["extended"], l3 = load_subset(cfg, icfg["extended_subset"], use_cache=use_cache)
-        log.extend(l3)
-        seen = set(train["paper_key"]) | set(val["paper_key"])
-        overlap = ext["paper_key"].isin(seen)
-        log.add("intellabs", "extended", ext.loc[overlap, "row_id"], "paper_in_train_or_val",
-                "extended rows whose paper appears in train/val are excluded from extended evaluation")
-        stats["extended_rows_excluded_for_train_val_overlap"] = int(overlap.sum())
-        parts["extended"] = ext.loc[~overlap].copy()
+        # Extended is robustness-only and its schemas were never inspected: if it cannot be loaded
+        # (unknown columns, a failed download) the main experiment must not be blocked.
+        try:
+            ext, stats["extended"], l3 = load_subset(cfg, icfg["extended_subset"], use_cache=use_cache)
+        except Exception as e:                                    # noqa: BLE001
+            stats["extended_skipped"] = f"{type(e).__name__}: {str(e)[:3000]}"
+            print(f"[intellabs] WARNING: extended subset skipped ({type(e).__name__}); the main experiment is "
+                  f"unaffected.\n  {str(e)[:1200]}")
+        else:
+            log.extend(l3)
+            seen = set(train["paper_key"]) | set(val["paper_key"])
+            overlap = ext["paper_key"].isin(seen)
+            log.add("intellabs", "extended", ext.loc[overlap, "row_id"], "paper_in_train_or_val",
+                    "extended rows whose paper appears in train/val are excluded from extended evaluation")
+            stats["extended_rows_excluded_for_train_val_overlap"] = int(overlap.sum())
+            parts["extended"] = ext.loc[~overlap].copy()
     caps = {"train": icfg.get("train_max_rows"), "val": icfg.get("val_max_rows"),
             "test": icfg.get("model_eval_max_rows"), "test_baseline": icfg.get("baseline_eval_max_rows"),
             "extended": icfg.get("extended_max_rows")}

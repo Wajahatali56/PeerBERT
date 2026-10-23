@@ -24,16 +24,32 @@ DATASET = "semdetect"
 SPLITS = ("train", "test")
 
 
+def select_parquet_files(repo_files, config_name):
+    """
+    Choose the Parquet files of the dataset configuration from the repo's file list.
+    Order of preference: files under "<config_name>/", then any Parquet whose path mentions the
+    config name, then every Parquet file of the repo. Returns (files, how). The caller prints
+    both, and build_frame() refuses a frame without the required columns, so a wrong guess
+    cannot pass silently.
+    """
+    parquet = sorted(f for f in repo_files if f.endswith(".parquet"))
+    if not parquet:
+        raise FileNotFoundError(
+            "no Parquet files in the dataset repository; first files found: " + ", ".join(sorted(repo_files)[:40]))
+    under = [f for f in parquet if f.startswith(f"{config_name}/")]
+    if under:
+        return under, f"files under {config_name}/"
+    named = [f for f in parquet if config_name in f]
+    if named:
+        return named, f"Parquet files whose path contains '{config_name}'"
+    return parquet, "all Parquet files of the repository (no config folder found)"
+
+
 def hf_frame_loader(repo_id, config_name):
     from huggingface_hub import hf_hub_download, list_repo_files
-    files = sorted(
-        f for f in list_repo_files(repo_id, repo_type="dataset")
-        if f.startswith(f"{config_name}/") and f.endswith(".parquet")
-    )
-    if not files:
-        raise FileNotFoundError(f"No Parquet files under {config_name}/ in {repo_id}")
-    frames = [pd.read_parquet(hf_hub_download(repo_id=repo_id, filename=f, repo_type="dataset"))
-              for f in files]
+    files, how = select_parquet_files(list_repo_files(repo_id, repo_type="dataset"), config_name)
+    print(f"[semdetect] using {len(files)} Parquet file(s) ({how}): {files[:6]}{' ...' if len(files) > 6 else ''}")
+    frames = [pd.read_parquet(hf_hub_download(repo_id=repo_id, filename=f, repo_type="dataset")) for f in files]
     return pd.concat(frames, ignore_index=True), files
 
 
