@@ -488,8 +488,8 @@ save(fig, "data_review_length")
 A(md(r"""
 ### 1.2 Data handling that a reviewer will ask about
 - **Human reviews repeated across generator files** (IntelLabs) are kept once; how many copies were dropped, and whether any copy differed in text, is counted.
-- **Fields not used as text.** Scores, flags and metadata are excluded. `code_of_conduct` is excluded because its length alone would reveal the label; the table
-  shows each excluded field's mean length per class, averaged over the loaded files.
+- **Fields not used as text.** Scores, flags and metadata are excluded, and so is `code_of_conduct`, whose length differed strongly by class in the dataset inspection.
+  The table recomputes this from the loaded files: each excluded field's mean length per class, averaged over files (a large ratio means the field alone would reveal the label).
 - **Sem-Detect** values are read from the real files; nothing about it is assumed.
 """))
 A(code(r"""
@@ -754,7 +754,7 @@ A(md(r"""
 ## Experiment 4: PeerBERT evaluation
 Evaluation on the official test split (whole-paper capped) and on the shared baseline subset. Thresholds: 0.5 and the threshold calibrated on **validation**.
 Sem-Detect is reported natively (3-class) and as a human-vs-AI binary view. Confidence intervals resample **whole papers**.
-For IntelLabs, accuracy is inflated by the 1:5 human:AI ratio, so Macro-F1 and ROC-AUC are the primary metrics.
+Accuracy depends on the human:AI ratio of the split (the AI share is shown in the tables), so Macro-F1 and ROC-AUC are the primary metrics.
 """))
 A(code(r"""
 if RUN["evaluate"] and BUDGET.allow("evaluation", EST_H["evaluate"]):
