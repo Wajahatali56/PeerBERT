@@ -36,7 +36,7 @@ SUBSETS = ("calibration", "test", "extended")
 FNAME_RE = re.compile(
     r"^(?P<conf>[A-Za-z]+)(?P<year>\d{4})\.(?P<subset>[A-Za-z]+)\.(?P<model>.+)\.csv$"
 )
-CONF_YEAR_IN_ID = re.compile(r"(iclr|neurips)[_\-.]?(\d{4})", re.IGNORECASE)
+CONF_YEAR_IN_ID = re.compile(r"(iclr|neurips)[_\-.]?(20\d{2})(?!\d)", re.IGNORECASE)
 KNOWN_CONFS = ("iclr", "neurips")
 
 
@@ -133,6 +133,8 @@ def _conference_value_problems(values, conf, year):
 def _custom_id_conf_problems(custom_ids, conf, year):
     bad, unparsed = 0, 0
     for cid in custom_ids:
+        if str(cid).strip().lower().startswith("human"):
+            continue        # human ids are "human-ICLR-<paper>-<review>" (no year); "ICLR-1875" is a paper number
         m = CONF_YEAR_IN_ID.search(str(cid))
         if not m:
             unparsed += 1

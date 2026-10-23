@@ -301,3 +301,11 @@ def test_prepare_and_verify_end_to_end(cfg, hub, monkeypatch, tmp_path):
     pd.concat([train, test.iloc[:1].assign(row_id="x")]).to_parquet(
         manifest_dir(cfg, "intellabs") / "train.parquet", index=False)
     assert mod.main(["--config", str(cfg_path), "--verify-only", "--dataset", "intellabs"]) == 3
+
+
+def test_custom_id_year_check_ignores_human_paper_numbers():
+    from src.data.intellabs_loader import _custom_id_conf_problems
+    ids = ["human-ICLR-1875-iVssNwXGvot", "human-ICLR-84-kJOtRRZgZTL",
+           "claude-sonnet-3.5v2-ICLR2021-84-kJOtRRZgZTL", "qwen2.5-72b-ICLR2021-2589-0SAn6hrto4V"]
+    assert _custom_id_conf_problems(ids, "ICLR", 2021) == (0, 0)
+    assert _custom_id_conf_problems(["qwen2.5-72b-ICLR2022-5-x"], "ICLR", 2021)[0] == 1
